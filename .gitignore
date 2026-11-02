@@ -28,3 +28,6 @@
 *.p12
 *.jks
 *.keystore
+
+# DSH 上传的附件目录
+/dsh-uploads/
