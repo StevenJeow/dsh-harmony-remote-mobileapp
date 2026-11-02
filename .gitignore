@@ -1,0 +1,33 @@
+/node_modules
+/oh_modules
+/local.properties
+/.idea
+**/build
+/.hvigor
+.cxx
+/.clangd
+/.clang-format
+/.clang-tidy
+**/.test
+/.appanalyzer
+
+# 本机私有配置：局域网地址、访问令牌、默认会话/模型。
+# 不进版本库 —— 拿到令牌就等于能在这台电脑上执行命令。
+/entry/src/main/ets/common/LocalConfig.ets
+
+# 改代码前留的备份副本
+*.bak
+*.bak.*
+*.bak-*
+
+# 打包产物
+*.hap
+*.app
+*.p7b
+*.cer
+*.p12
+*.jks
+*.keystore
+
+# DSH 上传的附件目录
+/dsh-uploads/

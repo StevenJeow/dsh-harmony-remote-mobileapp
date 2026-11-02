@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "DSH 遥控器主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "在手机上远程操作电脑上的 DSH"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "DSH 遥控器"
+    }
+  ]
+}
