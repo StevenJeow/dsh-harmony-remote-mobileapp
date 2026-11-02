@@ -87,7 +87,36 @@ $env:PATH           = "$env:JAVA_HOME\bin;$env:PATH"
 > PATH 里没有 `java` 会报 `00308018 spawn java ENOENT`。
 > 也可以直接在 DevEco Studio 里点运行，最省事。
 
-3. 装机：`hdc install <路径>.hap`，或者直接用 DevEco Studio 运行。
+## 装到手机
+
+### 推荐：小白调试助手（图形化，不用记命令）
+
+打好的包想直接装到手机上，**建议用「小白调试助手」这类图形化安装工具**：手机打开无线调试
+（或插 USB 打开调试模式）后，在工具里选一下打出来的 `.hap` / `.app`，点安装就行，
+比手敲 hdc 命令省事，也不用记设备号。
+
+几点提醒：
+
+- 它本质上是把 `hdc` 命令包了一层界面，**签名要求完全一样** —— 未签名的包照样装不上，
+  会报 `9568320 no signature file`。
+- 手机和电脑要在同一个局域网（无线调试必须），首次连接时手机上会弹允许调试的确认框。
+- 装的是同一个包名（`hmos.dsh.stevenjeow`）时会**覆盖**已装版本，不是共存的第二份。
+
+### 命令行方式
+
+```powershell
+# 先确认设备连上了
+hdc list targets
+# 装包（-r 表示覆盖安装）
+hdc install -r <路径>.hap
+```
+
+`hdc` 在 `<DevEco Studio 安装目录>\sdk\default\openharmony\toolchains\hdc.exe`，
+无线调试用 `hdc tconn <手机IP>:<端口>` 连接，端口在手机的「无线调试」页面里看。
+
+### 最省事的方式
+
+直接在 DevEco Studio 里点运行按钮 —— 它会自动构建、签名、安装、启动一条龙。
 
 ## 关于签名
 
