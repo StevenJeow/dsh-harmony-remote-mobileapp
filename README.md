@@ -4,7 +4,7 @@
 不套网页壳。电脑端跑 [`dsh-harmony-remote`](https://github.com/StevenJeow/dsh-harmony-remote)
 插件提供 HTTP 接口，手机 App 通过局域网直连。
 
-> **非官方项目。** 本项目由第三方（CreativeWise）开发，与深度求索（DeepSeek）官方无隶属关系，
+> **非官方项目。** 本项目由第三方（STEVEN JEOW）开发，与深度求索（DeepSeek）官方无隶属关系，
 > 未获得官方背书、合作或授权。项目名称只使用生态通行的缩写「DSH」，不使用官方商标作为产品名。
 
 - 包名：`hmos.dsh.stevenjeow`（沿用开发版，改成你自己的也可以）
