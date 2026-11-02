@@ -1,7 +1,7 @@
 {
   "app": {
-    "bundleName": "cn.creativewise.dsh.remote",
-    "vendor": "creativewise",
+    "bundleName": "hmos.dsh.stevenjeow",
+    "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",
     "buildVersion": "1",
