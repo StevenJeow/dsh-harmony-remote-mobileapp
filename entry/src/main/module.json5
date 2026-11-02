@@ -1,0 +1,68 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    // 发 HTTP 请求必须申请这个权限，否则 @ohos.net.http 会直接失败。
+    // 原来的 ArkWeb 版没申请（Web 组件走的是另一条通路），换成原生网络请求后必须补上。
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      }
+    ],
+    // 把工程里已有的 network_config.json 挂上。
+    // 该文件内容是 { "network-security-config": { "base-config": { "cleartextTrafficPermitted": true } } }，
+    // 作用是让系统放行 http:// 明文请求 —— 我们直连电脑上的 dsh 插件用的就是明文。
+    // 注：这个 metadata 键名在本地 SDK 的 schema 里没找到官方枚举，属于按 HarmonyOS 通行写法挂载；
+    // 如果构建校验报错，删掉这个 metadata 块即可，App 里还有 isCleartextPermitted() 自检会告诉你实情。
+    "metadata": [
+      {
+        "name": "ohos.net.network_security_config",
+        "resource": "$profile:network_config"
+      }
+    ],
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ]
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "EntryBackupAbility",
+        "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
+        "type": "backup",
+        "exported": false,
+        "metadata": [
+          {
+            "name": "ohos.extension.backup",
+            "resource": "$profile:backup_config"
+          }
+        ],
+      }
+    ]
+  }
+}
