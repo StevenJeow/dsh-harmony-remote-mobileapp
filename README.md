@@ -33,11 +33,13 @@
 entry/src/main/ets/
 ├── common/
 │   ├── ApiClient.ets            网络层：接口封装、超时、错误码翻译
-│   ├── LocalConfig.ets          本机私有配置（不进版本库，需自己填）
-│   ├── LocalConfig.example.ets  私有配置模板
+│   ├── RuntimeConfig.ets        运行期配置（地址/令牌，存 preferences）
+│   ├── LocalConfig.ets          构建期默认值（可选，不进版本库）
+│   ├── LocalConfig.example.ets  构建期默认值模板
 │   └── MarkdownView.ets         轻量 Markdown 渲染器
 └── pages/
-    ├── Index.ets                入口，底部三个 Tab 的容器与共享状态
+    ├── Index.ets                入口，先判配置再决定进主界面还是设置页
+    ├── SetupPage.ets            首次进入的连接设置页
     ├── ChatPage.ets             对话页
     ├── ModelPage.ets            模型页
     └── SessionsPage.ets         会话页
@@ -63,13 +65,27 @@ entry/src/main/ets/
 这个接口能读所有会话记录、能让 agent 在这台电脑上执行命令，等于一台遥控钥匙，
 别用弱口令，也别把令牌提交进任何仓库。
 
+## 第一次启动
+
+装好打开 App，会先出现**连接设置页**，填两项：
+
+| 字段 | 填什么 | 能不能留空 |
+|---|---|---|
+| 服务地址 | 电脑的局域网地址 + 插件端口，如 `http://192.168.1.9:3100` | 不能 |
+| 访问令牌 | 与电脑端 `cordis.patch.yml` 里 `harmony-remote` 的 token 一致 | 电脑端绑 `127.0.0.1` 时可留空 |
+
+填好点「保存并连接」，配置存进本机 preferences，**下次启动直接进主界面**，不用再填。
+
+地址填错连不上时，对话页会显示失败原因，旁边有「改地址」按钮可以回去重填。
+
+> 想发一份「装完就带默认地址」的包（比如给同事），可以额外把
+> `entry/src/main/ets/common/LocalConfig.example.ets` 复制成 `LocalConfig.ets`
+> 并在里面填 `LOCAL_BASE_URL` / `LOCAL_TOKEN` 作为构建期默认值。
+> 那个文件在 `.gitignore` 里，不会被提交。
+
 ## 本机构建
 
-1. 把 `entry/src/main/ets/common/LocalConfig.example.ets` 复制成
-   `entry/src/main/ets/common/LocalConfig.ets`，填上自己的局域网 IP 和令牌。
-   这个文件已经在 `.gitignore` 里，不会被提交。
-
-2. 用 DevEco Studio 自带的 hvigor 与 JDK 构建（下面是 Windows 的例子）：
+1. 直接用 DevEco Studio 自带的 hvigor 与 JDK 构建（下面是 Windows 的例子）：
 
 ```powershell
 $env:DEVECO_SDK_HOME = '<DevEco Studio 安装目录>\sdk'

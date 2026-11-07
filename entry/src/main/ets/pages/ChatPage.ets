@@ -97,6 +97,8 @@ export struct ChatPage {
   /** 由父组件注入：切到模型页 / 会话页。 */
   onOpenModelTab: () => void = () => {};
   onOpenSessionsTab: () => void = () => {};
+  /** 由父组件注入：回到首次设置页（地址填错了要有地方改）。 */
+  onResetConfig: () => void = () => {};
 
   /**
    * 消息容器：**已加载过的内容全都留在这里，只增不减**。
@@ -1557,12 +1559,21 @@ export struct ChatPage {
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 12, left: 18, right: 18 })
           Text('（长按上面这段可以复制）').fontSize(10).fontColor('#94a3b8').margin({ top: 6 })
-          Button('重试')
-            .fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#3b82f6').fontColor('#ffffff')
-            .padding({ left: 22, right: 22 })
-            .margin({ top: 16 })
-            .onClick(() => { this.bootstrap(); })
+          Row() {
+            Button('重试')
+              .fontSize(14).height(36).borderRadius(18)
+              .backgroundColor('#3b82f6').fontColor('#ffffff')
+              .padding({ left: 22, right: 22 })
+              .onClick(() => { this.bootstrap(); })
+            // 地址或令牌填错时，这里是唯一的出路：回设置页重填
+            Button('改地址')
+              .fontSize(14).height(36).borderRadius(18)
+              .backgroundColor('#f1f5f9').fontColor('#475569')
+              .padding({ left: 22, right: 22 })
+              .margin({ left: 10 })
+              .onClick(() => { this.onResetConfig(); })
+          }
+          .margin({ top: 16 })
         }
         .layoutWeight(1)
         .width('100%')

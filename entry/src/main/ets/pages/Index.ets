@@ -15,8 +15,11 @@
 import { ChatPage } from './ChatPage';
 import { ModelPage } from './ModelPage';
 import { SessionsPage } from './SessionsPage';
+import { SetupPage } from './SetupPage';
+import { common } from '@kit.AbilityKit';
 // 用一次网络自检，把「明文 HTTP 是否被系统放行」这个事实显示出来
 import { probeCleartext } from '../common/ApiClient';
+import { RuntimeConfig } from '../common/RuntimeConfig';
 
 @Entry
 @Component
@@ -35,10 +38,31 @@ struct Index {
   /** 明文 HTTP 自检结果，只在为 false 时显示警告条 */
   @State cleartextOk: boolean = true;
 
+  /**
+   * 配置是否读完（preferences 是异步的，读完之前不能决定显示哪个界面，
+   * 否则会先闪一下「首次设置」页再跳到主界面）。
+   */
+  @State booted: boolean = false;
+  /** 有没有可用的服务地址。false = 显示首次设置页。 */
+  @State configured: boolean = false;
+
   private tabsController: TabsController = new TabsController();
 
   aboutToAppear(): void {
     this.cleartextOk = probeCleartext();
+    this.boot();
+  }
+
+  /** 先读一次运行期配置，再决定进主界面还是进设置页。 */
+  async boot(): Promise<void> {
+    try {
+      await RuntimeConfig.init(getContext(this) as common.Context);
+      this.configured = RuntimeConfig.hasUrl();
+    } catch (e) {
+      // 读不出来就当没配过，让用户重新填，别把 App 卡在转圈上
+      this.configured = false;
+    }
+    this.booted = true;
   }
 
   /**
@@ -101,18 +125,36 @@ struct Index {
 
   build() {
     Column() {
-      // 只有系统真的拦明文 HTTP 时才出现，平时不占地方
-      if (!this.cleartextOk) {
-        Row() {
-          Text('注意：系统未放行明文 HTTP（cleartext）。请在 module.json5 里挂载 network_config。')
-            .fontSize(12)
-            .fontColor('#92400e')
-            .layoutWeight(1)
+      if (!this.booted) {
+        // 读配置的那几毫秒：给个转圈，别让用户看见半截界面
+        Column() {
+          LoadingProgress().width(32).height(32).color('#3b82f6')
         }
         .width('100%')
-        .padding({ left: 16, right: 16, top: 10, bottom: 10 })
-        .backgroundColor('#fef3c7')
-      }
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+      } else if (!this.configured) {
+        // 首次进入（或配置被清空）：先填服务地址和令牌
+        SetupPage({
+          onDone: () => {
+            this.configured = true;
+            // 配置刚变，三个 Tab 页的数据都要按新地址重拉一遍
+            this.sessionId = '';
+          }
+        })
+      } else {
+        // 只有系统真的拦明文 HTTP 时才出现，平时不占地方
+        if (!this.cleartextOk) {
+          Row() {
+            Text('注意：系统未放行明文 HTTP（cleartext）。请在 module.json5 里挂载 network_config。')
+              .fontSize(12)
+              .fontColor('#92400e')
+              .layoutWeight(1)
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+          .backgroundColor('#fef3c7')
+        }
 
       // 这一层刻意不放全局品牌栏：三个 Tab 页各自已有页头，
       // 再叠一层等于连着两层标题栏，顶部被吃掉 46px，
@@ -125,7 +167,9 @@ struct Index {
             sessionId: $sessionId,
             modelLabel: $modelLabel,
             onOpenModelTab: () => { this.tabsController.changeIndex(1); },
-            onOpenSessionsTab: () => { this.tabsController.changeIndex(2); }
+            onOpenSessionsTab: () => { this.tabsController.changeIndex(2); },
+            // 连不上时提供「改地址」的出口，回首次设置页
+            onResetConfig: () => { this.configured = false; }
           })
         }
         .tabBar(this.tabBarChat())
@@ -148,13 +192,14 @@ struct Index {
           })
         }
         .tabBar(this.tabBarSessions())
+        }
+        .barMode(BarMode.Fixed)
+        .barHeight(56)
+        .layoutWeight(1)
+        .onChange((index: number) => {
+          this.activeTab = index;
+        })
       }
-      .barMode(BarMode.Fixed)
-      .barHeight(56)
-      .layoutWeight(1)
-      .onChange((index: number) => {
-        this.activeTab = index;
-      })
     }
     .width('100%')
     .height('100%')

@@ -16,25 +16,31 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
 
 /* ==========================================================================
- * 集中配置区 —— 真正的值放在 LocalConfig.ets（不进版本库）
+ * 集中配置区 —— 地址和令牌改成「运行期」的，不再写死
  *
- * 为什么要拆开：BASE_URL 和 TOKEN 是「这台电脑专属」的东西，尤其是 TOKEN，
- * 拿到它就等于能在这台电脑上执行命令。以前它们硬编码在本文件里，
- * 这个工程一推到 GitHub 就等于把遥控器的钥匙一起推上去了。
- * 现在本文件只做转发，仓库里看到的是 LocalConfig.example.ets 模板。
+ * 发布版的行为：用户第一次打开 App 时手填地址和令牌（见 pages/SetupPage.ets），
+ * 存在 preferences 里，之后每次启动自动用回填的那个。
+ * 想给别人一份「装完就能用」的包，再在 LocalConfig.ets 里填构建期默认值。
+ *
+ * 历史：这两个值原来硬编码在本文件里，一推到 GitHub 就等于把遥控器的钥匙
+ * 一起推上去；现在走 RuntimeConfig，仓库里不含任何真实值。
  * ========================================================================== */
 
+import { RuntimeConfig } from './RuntimeConfig';
 import {
-  LOCAL_BASE_URL, LOCAL_TOKEN,
   LOCAL_SESSION_TITLE, LOCAL_SESSION_CWD,
   LOCAL_MODEL_PROVIDER, LOCAL_MODEL, LOCAL_EFFORT
 } from './LocalConfig';
 
-/** 电脑的局域网 IP + 插件端口。手机必须和电脑在同一个 Wi-Fi 下。 */
-export const BASE_URL: string = LOCAL_BASE_URL;
+/** 当前使用的接口地址：用户填的优先，没填则用构建期默认值（可能是空串）。 */
+export function apiBase(): string {
+  return RuntimeConfig.baseUrl();
+}
 
-/** 与插件 cordis.patch.yml 里的 token 必须一致。 */
-export const TOKEN: string = LOCAL_TOKEN;
+/** 当前使用的访问令牌；空串表示不带认证头。 */
+export function apiToken(): string {
+  return RuntimeConfig.token();
+}
 
 /** http 模块自己的超时（毫秒）。 */
 export const TIMEOUT_MS: number = 15000;
@@ -112,13 +118,13 @@ function explainHttpCode(code: number): string {
     return '请求参数不合法（客户端有 bug，请把这条发给开发者）';
   }
   if (code === 2300003) {
-    return 'URL 格式不对：检查 ApiClient.ets 里的 BASE_URL 是不是合法地址';
+    return 'URL 格式不对：检查首次进入时填的地址是不是合法 URL';
   }
   if (code === 2300005) {
     return '代理服务器名称解析失败：检查手机是否配了不可用的代理';
   }
   if (code === 2300006) {
-    return '域名解析失败（DNS）：BASE_URL 应该填电脑的局域网 IP，不要填域名';
+    return '域名解析失败（DNS）：地址应该填电脑的局域网 IP，不要填域名';
   }
   if (code === 2300007) {
     return '连不上服务器。最常见的原因按顺序查：① 手机和电脑不在同一个 Wi-Fi；'
@@ -546,7 +552,7 @@ function withParam(path: string, key: string, value: string): string {
 export async function callApi(path: string, method: http.RequestMethod, body?: object,
   hardTimeoutMs: number = HARD_TIMEOUT_MS): Promise<CallResult> {
   const request = http.createHttp();
-  const url: string = BASE_URL + path;
+  const url: string = apiBase() + path;
   const methodName: string = (method === http.RequestMethod.POST) ? 'POST' : 'GET';
   // 记录这次是不是被客户端硬超时掐断的，好在 catch 里给出不一样的原因说明
   const timeoutFlag: TimeoutFlag = { fired: false };
@@ -555,7 +561,7 @@ export async function callApi(path: string, method: http.RequestMethod, body?: o
       method: method,
       header: {
         'Content-Type': 'application/json',
-        'X-DSH-Token': TOKEN
+        'X-DSH-Token': apiToken()
       },
       connectTimeout: TIMEOUT_MS,
       // 读超时跟着硬超时走：长轮询 /events 需要比普通请求宽得多的窗口
@@ -576,7 +582,7 @@ export async function callApi(path: string, method: http.RequestMethod, body?: o
       return {
         ok: false, status: status, text: raw, errorCode: 'unauthorized',
         error: '密钥不正确（HTTP 401）\n[' + methodName + '] ' + url
-          + '\n原因：ApiClient.ets 顶部的 TOKEN 与电脑端 cordis.patch.yml 里的 token 不一致。'
+          + '\n原因：App 里填的令牌与电脑端 cordis.patch.yml 里的 token 不一致。'
       };
     }
 
@@ -765,7 +771,7 @@ function parseUploadReply(status: number, raw: string, url: string, how: string)
     return {
       ok: false,
       error: '密钥不正确（HTTP 401）\n[POST] ' + url
-        + '\n原因：ApiClient.ets 顶部的 TOKEN 与电脑端 cordis.patch.yml 里的 token 不一致。'
+        + '\n原因：App 里填的令牌与电脑端 cordis.patch.yml 里的 token 不一致。'
     };
   }
   let envelope: RawEnvelope;
@@ -798,7 +804,7 @@ async function uploadViaMultipart(sessionId: string, fileName: string, mimeType:
   content: ArrayBuffer): Promise<Result<UploadData>> {
   const request = http.createHttp();
   const path: string = (sessionId === '') ? '/upload' : withParam('/upload', 'sessionId', sessionId);
-  const url: string = BASE_URL + path;
+  const url: string = apiBase() + path;
   const timeoutFlag: TimeoutFlag = { fired: false };
   try {
     const filePart: http.MultiFormData = {
@@ -810,7 +816,7 @@ async function uploadViaMultipart(sessionId: string, fileName: string, mimeType:
     const options: http.HttpRequestOptions = {
       method: http.RequestMethod.POST,
       header: {
-        'X-DSH-Token': TOKEN
+        'X-DSH-Token': apiToken()
       },
       multiFormDataList: [filePart],
       connectTimeout: TIMEOUT_MS,
