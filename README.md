@@ -65,6 +65,11 @@ entry/src/main/ets/
 这个接口能读所有会话记录、能让 agent 在这台电脑上执行命令，等于一台遥控钥匙，
 别用弱口令，也别把令牌提交进任何仓库。
 
+> **插件版本**：请用 `dsh-harmony-remote` **0.3.0 及以上**。
+> DSH 0.2.x 把宿主接口从 `ctx.apiProxy` 换成了 Typert Remote 的 `ctx.sessionController`，
+> 旧版插件在新内核下每个会话请求都会返回 `HTTP 502 service-unavailable`；
+> 0.3.0 两种宿主面都适配，手机端这一侧不需要任何改动。
+
 ## 第一次启动
 
 装好打开 App，会先出现**连接设置页**，填两项：
