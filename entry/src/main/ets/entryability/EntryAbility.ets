@@ -1,6 +1,7 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { ShareIntent } from '../common/ShareIntent';
 
 const DOMAIN = 0x0000;
 
@@ -14,7 +15,19 @@ export default class EntryAbility extends UIAbility {
     } catch (err) {
       hilog.error(DOMAIN, 'testTag', 'Failed to set colorMode. Cause: %{public}s', JSON.stringify(err));
     }
+    // 冷启动：从分享面板拉起时，图片在这里就被带进来了，先接下
+    ShareIntent.capture(want);
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
+  }
+
+  /**
+   * 热启动：应用已经在后台时，用户又分享一张图过来。
+   * 这时候不会重新走 onCreate、页面也不会重建，必须在这里再接一次，
+   * 页面那边靠 ShareIntent 写的 StorageProp 计数感知到。
+   */
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    ShareIntent.capture(want);
+    hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onNewWant');
   }
 
   onDestroy(): void {

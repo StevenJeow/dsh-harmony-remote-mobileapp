@@ -14,6 +14,7 @@ import { promptAction } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { MarkdownView } from '../common/MarkdownView';
+import { ShareIntent, SHARE_TICK_KEY } from '../common/ShareIntent';
 import {
   ChatMessage, MessagesData, StatusData, SendData, CancelData, Result,
   UploadedFileInfo, UploadedImage, UploadData,
@@ -99,6 +100,13 @@ export struct ChatPage {
   onOpenSessionsTab: () => void = () => {};
   /** 由父组件注入：回到首次设置页（地址填错了要有地方改）。 */
   onResetConfig: () => void = () => {};
+
+  /**
+   * 从系统分享面板进来的图片计数。
+   * 值由 ShareIntent 递增；@Watch 让它一变就立刻去取图上传。
+   * 冷启动时值可能已经是 1（EntryAbility 先于页面执行），所以初次也要主动消费一次。
+   */
+  @StorageProp(SHARE_TICK_KEY) @Watch('onShareTick') shareTick: number = 0;
 
   /**
    * 消息容器：**已加载过的内容全都留在这里，只增不减**。
@@ -281,6 +289,7 @@ export struct ChatPage {
       await this.loadMessages(true);
       this.ensureRunWatch();
       await this.loadSessionMeta();
+      await this.consumeShared();
     } catch (e) {
       // 以前这里没有 catch：异步里抛异常没人接，loading 就永远停在 true，
       // 界面上只剩一个永远转的圈，什么线索都没有。
@@ -420,6 +429,7 @@ export struct ChatPage {
       await this.applyModelDefault();   // 会话确定后套用默认模型（flash/high）
       await this.loadSessionMeta();     // 页头要显示会话标题
       this.ensureRunWatch();
+      await this.consumeShared();       // 从分享面板进来的图片
     } catch (e) {
       // 这个函数是被 @Watch / 定时器调起来的，抛出去没人接，会静默消失
       this.errorMsg = '刷新异常：' + String((e as Error).message);
@@ -1037,6 +1047,37 @@ export struct ChatPage {
     }
   }
 
+  /** 分享计数变了 —— 应用在前台时用户又分享进来一张。 */
+  onShareTick(): void {
+    this.consumeShared();
+  }
+
+  /**
+   * 把外面分享进来的图片上传成「待发送附件」。
+   *
+   * 没有会话时先不动：取出来也没地方上传，等会话确定后（loadAll 末尾）会再调一次。
+   * 上传成功后用户会在输入框上方看到附件芯片，点发送就随消息一起发出去。
+   */
+  async consumeShared(): Promise<void> {
+    if (this.sessionId === '' || this.uploading) {
+      return;
+    }
+    const uris: string[] = ShareIntent.take();
+    if (uris.length === 0) {
+      return;
+    }
+    this.uploading = true;
+    try {
+      for (let i = 0; i < uris.length; i++) {
+        // 分享声明的类型是 general.image，直接按图片上传：
+        // 分享来的文件往往没有扩展名，靠 guessMime 会猜成 text/plain。
+        await this.uploadOne(uris[i], 'image/jpeg');
+      }
+    } finally {
+      this.uploading = false;
+    }
+  }
+
   /** 「＋」：选文件 -> 读字节 -> 上传到会话工作区。 */
   async pickAndUpload(): Promise<void> {
     if (this.uploading) {
@@ -1068,7 +1109,7 @@ export struct ChatPage {
    * 请求体就是空的（后端就会报 empty-body）。所以必须在这里真的把内容读成字节，
    * 而且每一步都校验：读不到就明确报错，绝不把空 body 发出去。
    */
-  async uploadOne(uri: string): Promise<void> {
+  async uploadOne(uri: string, forcedMime: string = ''): Promise<void> {
     let file: fileIo.File | null = null;
     try {
       const name: string = fileNameOf(uri);
@@ -1114,7 +1155,8 @@ export struct ChatPage {
       // readSync 可能少读，按实际长度截断，避免尾部留下未初始化的字节
       const content: ArrayBuffer = (read === size) ? buffer : buffer.slice(0, read);
 
-      const res: Result<UploadData> = await uploadFile(this.sessionId, name, guessMime(name), content);
+      const res: Result<UploadData> = await uploadFile(this.sessionId, name,
+        forcedMime !== '' ? forcedMime : guessMime(name), content);
       if (!res.ok) {
         promptAction.showToast({ message: res.error, duration: 4000 });
         return;
