@@ -97,7 +97,7 @@ export struct ModelPage {
       for (let j = 0; j < models.length; j++) {
         const m: ModelInfo = models[j];
         const mId: string = (m.id !== undefined) ? m.id : '';
-        const isCur: boolean = (cur !== undefined && cur.provider === g.id && cur.model === mId);
+        const isCur: boolean = (cur !== undefined && cur !== null && cur.provider === g.id && cur.model === mId);
         flat.push({
           isHeader: false,
           title: (m.name !== undefined && m.name !== '') ? m.name : mId,
@@ -155,7 +155,7 @@ export struct ModelPage {
               .backgroundColor(this.current?.reasoningEffort === ef.id ? '#3b82f6' : '#f1f5f9')
               .fontColor(this.current?.reasoningEffort === ef.id ? '#ffffff' : '#475569')
               .onClick(() => {
-                if (this.current !== undefined && ef.id !== undefined) {
+                if (this.current !== undefined && this.current !== null && ef.id !== undefined) {
                   this.doSelect(this.current.provider !== undefined ? this.current.provider : '',
                     this.current.model !== undefined ? this.current.model : '', ef.id);
                 }

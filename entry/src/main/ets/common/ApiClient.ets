@@ -667,8 +667,8 @@ export async function fetchStatus(sessionId: string): Promise<Result<StatusData>
  * 服务端刻意不替我们猜（怕 /send 悄悄发错会话），所以挑的责任在客户端；
  * 用户随时可以在「会话」页改成别的。
  */
-export function pickSessionId(d: StatusData | undefined): string {
-  if (d === undefined) {
+export function pickSessionId(d: StatusData | undefined | null): string {
+  if (d === undefined || d === null) {
     return '';
   }
   // 注意用 asText：/status 推不出会话时给的是 JSON null，不是空串
@@ -956,8 +956,10 @@ export async function cancelTurn(sessionId: string): Promise<Result<CancelData>>
  * ========================================================================== */
 
 /** (provider, model) 拼成一行显示文本。 */
-export function modelLabelOf(sel: ModelSelection | undefined): string {
-  if (sel === undefined || sel.model === undefined || sel.model === '') {
+export function modelLabelOf(sel: ModelSelection | undefined | null): string {
+  // 桥在没有会话/拿不到 models 服务时给的是 JSON null，不是 undefined；
+  // 只判 undefined 会在这里抛 "Cannot read property model of null"。
+  if (sel === undefined || sel === null || sel.model === undefined || sel.model === null || sel.model === '') {
     return '未选择模型';
   }
   if (sel.provider !== undefined && sel.provider !== '') {

@@ -46,6 +46,22 @@
             "actions": [
               "ohos.want.action.home"
             ]
+          },
+          // 让本应用出现在系统「分享」面板里：相册选中图片 -> 分享 -> DSH 遥控器。
+          // action 必须是 ohos.want.action.sendData（不是 ohos.want.action.send）；
+          // general.image 覆盖 png/jpg/webp/heic 等图片格式；
+          // 分享过来的文件由 ShareIntent 用 Share Kit 解析后上传。
+          {
+            "actions": [
+              "ohos.want.action.sendData"
+            ],
+            "uris": [
+              {
+                "scheme": "file",
+                "utd": "general.image",
+                "maxFileSupported": 9
+              }
+            ]
           }
         ]
       }

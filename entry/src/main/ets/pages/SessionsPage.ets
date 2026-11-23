@@ -56,7 +56,7 @@ export struct SessionsPage {
       this.loading = false;
       return;
     }
-    this.sessions = (res.data !== undefined && res.data.sessions !== undefined) ? res.data.sessions : [];
+    this.sessions = (res.data !== undefined && res.data !== null && res.data.sessions !== undefined && res.data.sessions !== null) ? res.data.sessions : [];
     this.loading = false;
   }
 
