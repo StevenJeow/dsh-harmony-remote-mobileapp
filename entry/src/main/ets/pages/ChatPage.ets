@@ -272,7 +272,7 @@ export struct ChatPage {
         serverSid = await this.findConfiguredSession();
       }
       // ② 没配默认 / 没匹配上，才退回服务端推断与 liveAgents
-      if (serverSid === '' && d !== undefined) {
+      if (serverSid === '' && d !== undefined && d !== null) {
         // pickSessionId：服务端推不出唯一会话（挂了多个 agent）时，从 liveAgents
         // 里挑一个默认，否则本页和模型页的会话接口会全部 409 no-session。
         serverSid = pickSessionId(d);
@@ -413,7 +413,7 @@ export struct ChatPage {
   async loadAll(): Promise<void> {
     try {
       const st: Result<StatusData> = await fetchStatus(this.sessionId);
-      if (st.ok && st.data !== undefined) {
+      if (st.ok && st.data !== undefined && st.data !== null) {
         this.running = (st.data.running === true);
         this.modelLabel = modelLabelOf(st.data.model);
         // 还没有会话时再补挑一次（例如 App 先起来、agent 之后才挂上）
@@ -1026,10 +1026,10 @@ export struct ChatPage {
    */
   async refreshRunState(): Promise<void> {
     const st: Result<StatusData> = await fetchStatus(this.sessionId);
-    if (!st.ok || st.data === undefined) {
+    if (!st.ok || st.data === undefined || st.data === null) {
       return;
     }
-    if (st.data.model !== undefined) {
+    if (st.data.model !== undefined && st.data.model !== null) {
       this.modelLabel = modelLabelOf(st.data.model);
     }
     const nowRunning: boolean = (st.data.running === true);
