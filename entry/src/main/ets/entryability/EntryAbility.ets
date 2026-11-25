@@ -43,6 +43,21 @@ export default class EntryAbility extends UIAbility {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;
       }
+      // 全屏 + 把系统栏高度传给页面，由页面自己留内边距。
+      // 只全屏不留边距会让标题顶穿状态栏（上一版就是这么坏的）。
+      windowStage.getMainWindow().then((win: window.Window) => {
+        win.setWindowLayoutFullScreen(true).catch(() => {});
+        // 状态栏/手势条也刷成白色，跟页面同色，顶部不会出现一条异色空栏
+        win.setWindowSystemBarProperties({
+          statusBarColor: '#00000000',
+          navigationBarColor: '#00000000',
+          statusBarContentColor: '#1F2329',
+          navigationBarContentColor: '#1F2329'
+        }).catch(() => {});
+        const area: window.AvoidArea = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
+        AppStorage.setOrCreate<number>('safeTopPx', area.topRect.height);
+        AppStorage.setOrCreate<number>('safeBottomPx', area.bottomRect.height);
+      }).catch(() => {});
       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
     });
   }

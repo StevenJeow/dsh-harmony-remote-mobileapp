@@ -1,162 +1,118 @@
 /**
- * Index.ets — App 入口页（底部三个 Tab 的容器）
+ * Index.ets — App 入口（左侧会话抽屉 + 右侧对话区）
  * ---------------------------------------------------------------------------
- * 取代原来的 ArkWeb 版首页（用 Web 组件套网页那条路已废弃）。
- * 现在完全是原生 ArkTS + ArkUI 实现，通过网络层直连电脑上的 dsh-harmony-remote 插件。
+ * 交互对齐 DeepSeek 官方网页版：左边是会话栏，右边是对话。
+ * 手机竖屏放不下常驻侧栏，所以改成从左侧滑出的抽屉：
  *
- * 本文件只做两件事：
- *   1. 用 Tabs + TabContent 承载「对话 / 模型 / 会话」三个页面
- *   2. 持有三个页面共享的状态：
- *        sessionId  —— 当前会话（三个页面都要用；初值由服务端自动选择规则确定）
- *        modelLabel —— 当前模型名（对话页顶部显示，模型页切换后回写）
+ *   主区    ：只有对话（ChatPage）
+ *   抽屉    ：新对话 / 会话列表 / 模型入口（SessionDrawer）
+ *   模型页  ：从抽屉底部进入，全屏覆盖，选完自动关
  *
- * 用 @State + @Link 做跨 Tab 同步：子页面改 sessionId，其他页面立刻跟着变。
+ * 与旧版的区别：原来的「对话 / 模型 / 会话」三个底部 Tab 取消了 ——
+ * 会话列表搬进抽屉，模型入口也搬进抽屉底部，跟网页版一致。
  */
 import { ChatPage } from './ChatPage';
 import { ModelPage } from './ModelPage';
-import { SessionsPage } from './SessionsPage';
-// 用一次网络自检，把「明文 HTTP 是否被系统放行」这个事实显示出来
+import { SessionDrawer } from './SessionDrawer';
 import { probeCleartext } from '../common/ApiClient';
 
 @Entry
 @Component
 struct Index {
-  /**
-   * 当前选中的 Tab：0 对话 / 1 模型 / 2 会话。
-   * 注意：不能叫 tabIndex —— 那是 ArkUI CustomComponent 基类上的内置方法
-   * （CommonMethod.tabIndex(index): CommonAttribute，用于焦点顺序），
-   * 同名会报 "Property 'tabIndex' ... is not assignable to the same property in base type"。
-   */
-  @State activeTab: number = 0;
-  /** 当前会话 id。空串表示"还没确定"，服务端会按自动选择规则帮我们挑一个。 */
+  /** 当前会话 id（对话页与抽屉共享）。 */
   @State sessionId: string = '';
-  /** 当前模型显示名（对话页顶部、模型页回显都用它） */
+  /** 当前模型显示名。 */
   @State modelLabel: string = '未选择模型';
-  /** 明文 HTTP 自检结果，只在为 false 时显示警告条 */
+  /** 明文 HTTP 自检结果，只在为 false 时显示警告条。 */
   @State cleartextOk: boolean = true;
-
-  private tabsController: TabsController = new TabsController();
+  /** 抽屉是否展开。 */
+  @State drawerOpen: boolean = false;
+  /** 模型页是否全屏覆盖。 */
+  @State showModel: boolean = false;
+  /**
+   * 模型页用一个固定的「当前页」值触发加载。
+   * ModelPage 里 @Watch 的是 activeTab，等于 1 时才拉模型目录。
+   */
+  @State activeTab: number = 1;
 
   aboutToAppear(): void {
     this.cleartextOk = probeCleartext();
   }
 
-  /**
-   * 三个 Tab 的底栏。
-   * 故意写成「零参数 @Builder + 直接读 this.activeTab」：
-   * 带参数的 @Builder 在 ArkUI V1 里按值捕获，状态变了不会重绘，高亮会卡住；
-   * 零参数版本能正常跟着 this.activeTab 刷新。
-   */
-  @Builder
-  tabBarChat() {
-    Column() {
-      // 「对话」Tab 用 DeepSeek 官方标识（media/icon.png：黑鲸鱼 + 透明底）。
-      // PNG 不能用 fillColor 染色，所以选中/未选中用不透明度区分；
-      // 0.32 是为了让未选中的鲸鱼跟另外两个符号（#94a3b8）看着差不多重。
-      Image($r('app.media.icon'))
-        .width(22)
-        .height(22)
-        .objectFit(ImageFit.Contain)
-        .opacity(this.activeTab === 0 ? 1 : 0.32)
-      Text('对话').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 0 ? '#3b82f6' : '#94a3b8')
-    }
-    .width('100%')
-    .height(56)
-    .justifyContent(FlexAlign.Center)
-  }
-
-  @Builder
-  tabBarModel() {
-    Column() {
-      if (this.activeTab === 1) {
-        SymbolGlyph($r('sys.symbol.wand_and_stars_fill')).fontSize(22).fontColor(['#3b82f6'])
-      } else {
-        SymbolGlyph($r('sys.symbol.wand_and_stars')).fontSize(22).fontColor(['#94a3b8'])
-      }
-      Text('模型').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 1 ? '#3b82f6' : '#94a3b8')
-    }
-    .width('100%')
-    .height(56)
-    .justifyContent(FlexAlign.Center)
-  }
-
-  @Builder
-  tabBarSessions() {
-    Column() {
-      if (this.activeTab === 2) {
-        SymbolGlyph($r('sys.symbol.clock_fill')).fontSize(22).fontColor(['#3b82f6'])
-      } else {
-        SymbolGlyph($r('sys.symbol.clock')).fontSize(22).fontColor(['#94a3b8'])
-      }
-      Text('会话').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 2 ? '#3b82f6' : '#94a3b8')
-    }
-    .width('100%')
-    .height(56)
-    .justifyContent(FlexAlign.Center)
-  }
+  /** 系统栏高度（px，由 EntryAbility 写入）。 */
+  @StorageProp('safeTopPx') safeTopPx: number = 0;
+  @StorageProp('safeBottomPx') safeBottomPx: number = 0;
 
   build() {
-    Column() {
-      // 只有系统真的拦明文 HTTP 时才出现，平时不占地方
-      if (!this.cleartextOk) {
-        Row() {
-          Text('注意：系统未放行明文 HTTP（cleartext）。请在 module.json5 里挂载 network_config。')
-            .fontSize(12)
-            .fontColor('#92400e')
-            .layoutWeight(1)
+    Stack({ alignContent: Alignment.TopStart }) {
+      // 主区：只有对话
+      Column() {
+        if (!this.cleartextOk) {
+          Row() {
+            Text('注意：系统未放行明文 HTTP（cleartext）。请在 module.json5 里挂载 network_config。')
+              .fontSize(12).fontColor('#92400E').layoutWeight(1)
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+          .backgroundColor('#FEF3C7')
         }
-        .width('100%')
-        .padding({ left: 16, right: 16, top: 10, bottom: 10 })
-        .backgroundColor('#fef3c7')
+
+        ChatPage({
+          sessionId: $sessionId,
+          modelLabel: $modelLabel,
+          onOpenModelTab: () => { this.showModel = true; },
+          // 原来的「会话」Tab 入口，现在打开左侧抽屉
+          onOpenSessionsTab: () => { this.drawerOpen = true; }
+        })
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#FFFFFF')
+
+      // 抽屉 + 遮罩
+      if (this.drawerOpen) {
+        Row()
+          .width('100%')
+          .height('100%')
+          .backgroundColor('#33000000')
+          .onClick(() => {
+            this.drawerOpen = false;
+          })
+
+        SessionDrawer({
+          sessionId: $sessionId,
+          modelLabel: $modelLabel,
+          onClose: () => { this.drawerOpen = false; },
+          onPicked: () => { this.drawerOpen = false; },
+          onOpenModel: () => {
+            this.drawerOpen = false;
+            this.showModel = true;
+          }
+        })
+          .width('80%')
+          .height('100%')
+          .shadow({ radius: 18, color: '#33000000', offsetX: 6, offsetY: 0 })
       }
 
-      // 这里原来还有一条「鲸鱼 + DeepSeek Harness」的品牌栏。
-      // 它跟下面三个 Tab 页各自的页头叠在一起，等于连着两层标题栏：
-      // 顶部被吃掉 46px，而且三个页面的页头高度还不一样，切 Tab 时正文会上下跳。
-      // 品牌感改由对话页页头左侧的鲸鱼图标承担（见 ChatPage.header）。
-
-      Tabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-        TabContent() {
-          ChatPage({
-            sessionId: $sessionId,
-            modelLabel: $modelLabel,
-            onOpenModelTab: () => { this.tabsController.changeIndex(1); },
-            onOpenSessionsTab: () => { this.tabsController.changeIndex(2); }
-          })
-        }
-        .tabBar(this.tabBarChat())
-
-        TabContent() {
-          ModelPage({
-            sessionId: $sessionId,
-            modelLabel: $modelLabel,
-            activeTab: $activeTab,
-            onPicked: () => { this.tabsController.changeIndex(0); }
-          })
-        }
-        .tabBar(this.tabBarModel())
-
-        TabContent() {
-          SessionsPage({
-            sessionId: $sessionId,
-            activeTab: $activeTab,
-            onPicked: () => { this.tabsController.changeIndex(0); }
-          })
-        }
-        .tabBar(this.tabBarSessions())
+      // 模型页全屏覆盖
+      if (this.showModel) {
+        ModelPage({
+          sessionId: $sessionId,
+          modelLabel: $modelLabel,
+          activeTab: $activeTab,
+          onSelected: (provider: string, model: string) => {
+            this.modelLabel = model;
+          },
+          onPicked: () => { this.showModel = false; }
+        })
+          .width('100%')
+          .height('100%')
       }
-      .barMode(BarMode.Fixed)
-      .barHeight(56)
-      .layoutWeight(1)
-      .onChange((index: number) => {
-        this.activeTab = index;
-      })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#ffffff')
+    .backgroundColor('#FFFFFF')
+    // 内容直接画到屏幕最上沿/最下沿，盖住系统栏，彻底消除上下空栏
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

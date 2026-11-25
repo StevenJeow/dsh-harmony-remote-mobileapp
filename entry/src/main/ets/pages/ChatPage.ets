@@ -104,6 +104,8 @@ export struct ChatPage {
    * @Watch 让它一变就立刻去取图上传；冷启动时值可能已经非 0，所以进页面也会主动消费一次。
    */
   @StorageProp(SHARE_TICK_KEY) @Watch('onShareTick') shareTick: number = 0;
+  /** 状态栏高度（px）：全屏后内容要避开状态栏，否则标题被遮挡。 */
+  @StorageProp('safeTopPx') safeTopPx: number = 0;
 
   /**
    * 消息容器：**已加载过的内容全都留在这里，只增不减**。
@@ -1219,67 +1221,42 @@ export struct ChatPage {
    */
   @Builder
   header() {
-    Column() {
-      // 第一行：会话标题（点击 -> 会话页）
-      Row() {
-        Row() {
-          Image($r('app.media.icon'))
-            .width(18)
-            .height(18)
-            .objectFit(ImageFit.Contain)
-          Text(this.headTitle())
-            .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
-            .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-            .margin({ left: 8 })
-          // 「可以去下一层」的提示：以前整块可点但没有任何暗示
-          Text('›').fontSize(17).fontColor('#cbd5e1').margin({ left: 4 })
-        }
-        .layoutWeight(1)
+    // 对齐 DeepSeek 官方：只有 ☰ 和右上两个图标，没有标题行、没有分割线
+    Row() {
+      Text('☰')
+        .fontSize(24)
+        .fontColor('#1F2329')
+        .padding({ left: 4, right: 12, top: 4, bottom: 4 })
         .onClick(() => { this.onOpenSessionsTab(); })
 
-        if (this.running) {
-          Row() {
-            Circle({ width: 6, height: 6 }).fill('#10b981')
-            Text('运行中').fontSize(11).fontColor('#10b981').margin({ left: 4 })
-          }.margin({ right: 8 })
-        }
+      Blank()
 
-        // 「停止」在底部发送键上（任务运行中发送键会变成停止键），这里只留刷新
-        Button('刷新')
-          .fontSize(12)
-          .height(30)
-          .padding({ left: 14, right: 14 })
-          .backgroundColor('#f1f5f9')
-          .fontColor('#475569')
-          .borderRadius(15)
-          .onClick(() => {
-            this.loadAll();
-          })
+      if (this.running) {
+        Row() {
+          Circle({ width: 6, height: 6 }).fill('#10b981')
+          Text('运行中').fontSize(11).fontColor('#10b981').margin({ left: 4 })
+        }.margin({ right: 10 })
       }
-      .width('100%')
 
-      // 第二行：当前模型（点击 -> 模型页）+ 右侧弱化的工作目录
-      Row() {
-        Text('模型 · ' + this.modelLabel)
-          .fontSize(11).fontColor('#3b82f6')
-          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-        Text('›').fontSize(11).fontColor('#93c5fd').margin({ left: 2 })
-        Text(this.sessionCwd !== '' ? this.sessionCwd : '')
-          .fontSize(11).fontColor('#cbd5e1')
-          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-          .layoutWeight(1).textAlign(TextAlign.End)
-          .margin({ left: 10 })
-      }
-      .width('100%')
-      .margin({ top: 6, left: 26 })
-      .onClick(() => { this.onOpenModelTab(); })
+      Text('⊘')
+        .fontSize(22)
+        .fontColor('#1F2329')
+        .padding({ left: 8, right: 8 })
+        .onClick(() => { this.loadAll(); })
+
+      Text('⊕')
+        .fontSize(22)
+        .fontColor('#1F2329')
+        .padding({ left: 8, right: 4 })
+        .onClick(() => { this.onOpenSessionsTab(); })
     }
     .width('100%')
-    .height(72)
-    .justifyContent(FlexAlign.Center)
-    .padding({ left: 16, right: 16 })
+    .height(52)
+    .padding({
+      left: 16, right: 16,
+      top: this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0
+    })
     .backgroundColor('#ffffff')
-    .border({ width: { bottom: 1 }, color: '#eef2f7' })
   }
 
   /** 底部输入区。 */
@@ -1306,14 +1283,14 @@ export struct ChatPage {
                   .margin({ left: 4 })
                 Text('✕')
                   .fontSize(12)
-                  .fontColor('#94a3b8')
+                  .fontColor('#9CA3AF')
                   .margin({ left: 8 })
                   .onClick(() => {
                     this.removePending(index);
                   })
               }
               .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-              .backgroundColor('#eef2f7')
+              .backgroundColor('#EFEFEF')
               .borderRadius(14)
             }
           }, (item: UploadedFileInfo, index: number) => {
@@ -1324,33 +1301,21 @@ export struct ChatPage {
         .scrollBar(BarState.Off)
         .width('100%')
         .height(36)
-        .padding({ left: 16, right: 16 })
+        .padding({ left: 4, right: 4 })
         .margin({ top: 8 })
       }
 
-      Row() {
-        // 「＋」上传按钮：选文件 -> 传到会话工作区
-        Button(this.uploading ? '···' : '+')
-          .fontSize(this.uploading ? 12 : 20)
-          .height(40)
-          .width(40)
-          .padding(0)
-          .borderRadius(20)
-          .backgroundColor('#f1f5f9')
-          .fontColor('#475569')
-          .enabled(!this.uploading)
-          .onClick(() => {
-            this.pickAndUpload();
-          })
-
-        TextInput({ text: this.input, placeholder: '发一条指令…' })
-          .layoutWeight(1)
-          .height(40)
-          .fontSize(15)
-          .backgroundColor('#f1f5f9')
-          .borderRadius(20)
-          .padding({ left: 16, right: 16 })
-          .margin({ left: 8 })
+      // 大圆角白卡：一行输入 + 下方胶囊按钮排（对齐 DeepSeek 官方输入区）
+      Column() {
+        TextInput({ text: this.input, placeholder: '发消息或按住说话' })
+          .width('100%')
+          .height(44)
+          .fontSize(16)
+          .fontColor('#1F2329')
+          .placeholderColor('#9CA3AF')
+          .backgroundColor(Color.Transparent)
+          .borderRadius(0)
+          .padding({ left: 4, right: 4 })
           .onChange((value: string) => {
             this.input = value;
           })
@@ -1358,40 +1323,78 @@ export struct ChatPage {
             this.doSend();
           })
 
-        // 任务运行中 —— 发送键变成红色的「停止」键
-        if (this.running) {
-          Button(this.cancelling ? '停止中' : '停止')
-            .fontSize(15)
-            .height(40)
-            .padding({ left: 18, right: 18 })
-            .margin({ left: 8 })
-            .borderRadius(20)
-            .backgroundColor(this.cancelling ? '#fca5a5' : '#dc2626')
-            .fontColor('#ffffff')
-            .enabled(!this.cancelling)
-            .onClick(() => {
-              this.doCancel();
-            })
-        } else {
-          Button(this.sending ? '发送中' : '发送')
-            .fontSize(15)
-            .height(40)
-            .padding({ left: 18, right: 18 })
-            .margin({ left: 8 })
-            .borderRadius(20)
-            .backgroundColor(this.canSend() && !this.sending ? '#3b82f6' : '#cbd5e1')
+        Row() {
+          // 深度思考
+          Row() {
+            Text('◍').fontSize(12).fontColor('#4D6BFE')
+            Text('深度思考').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
+          }
+          .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+          .backgroundColor('#EEF2FF')
+          .borderRadius(16)
+          .onClick(() => { this.onOpenModelTab(); })
+
+          // 智能搜索
+          Row() {
+            Text('◎').fontSize(12).fontColor('#4D6BFE')
+            Text('智能搜索').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
+          }
+          .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+          .backgroundColor('#EEF2FF')
+          .borderRadius(16)
+          .margin({ left: 8 })
+          .onClick(() => { this.onOpenModelTab(); })
+
+          Blank()
+
+          // ＋ 上传
+          Text('+')
+            .fontSize(24)
+            .fontColor('#6B7280')
+            .padding({ left: 8, right: 8 })
+            .onClick(() => { this.pickAndUpload(); })
+
+          // 发送 / 停止
+          if (this.running) {
+            Button(this.cancelling ? '停止中' : '停止')
+              .fontSize(13)
+              .height(32)
+              .padding({ left: 12, right: 12 })
+              .borderRadius(16)
+              .backgroundColor('#FEE2E2')
+              .fontColor('#DC2626')
+              .enabled(!this.cancelling)
+              .onClick(() => { this.doCancel(); })
+          } else {
+            Button() {
+              if (this.sending) {
+                Text('…').fontSize(15).fontColor('#ffffff')
+              } else {
+                Text('↑').fontSize(18).fontColor('#ffffff')
+              }
+            }
+            .height(32)
+            .width(32)
+            .padding(0)
+            .borderRadius(16)
+            .backgroundColor(this.canSend() && !this.sending ? '#4D6BFE' : '#E5E7EB')
             .enabled(this.canSend() && !this.sending)
-            .onClick(() => {
-              this.doSend();
-            })
+            .onClick(() => { this.doSend(); })
+          }
         }
+        .width('100%')
+        .margin({ top: 2 })
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: 8, bottom: 10 })
+      .padding({ left: 14, right: 14, top: 10, bottom: 12 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius(26)
+      .border({ width: 1, color: '#EFEFEF' })
+      .shadow({ radius: 18, color: 'rgba(0,0,0,0.06)', offsetY: 4 })
     }
     .width('100%')
+    .padding({ left: 12, right: 12, top: 8, bottom: 10 })
     .backgroundColor('#ffffff')
-    .border({ width: { top: 1 }, color: '#eef2f7' })
   }
 
   /* ================= 确认面板（自绘，黑白配色） =================
@@ -1502,7 +1505,7 @@ export struct ChatPage {
                     .fontSize(11).fontColor('#9ca3af').width('100%').margin({ top: 12 })
                   TextInput({ text: this.freeOf(qi), placeholder: this.customHint(q) })
                     .width('100%').height(42).fontSize(14)
-                    .backgroundColor('#f1f5f9').borderRadius(10)
+                    .backgroundColor('#F3F4F6').borderRadius(10)
                     .padding({ left: 12, right: 12 })
                     .margin({ top: 4 })
                     .onChange((value: string) => {
@@ -1577,10 +1580,10 @@ export struct ChatPage {
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(36).height(36).color('#3b82f6')
+          LoadingProgress().width(36).height(36).color('#4D6BFE')
           // 把「卡在哪一步」显示出来：转圈不再是不带线索的黑盒
           Text(this.loadStage !== '' ? this.loadStage : '加载中…')
-            .fontSize(13).fontColor('#94a3b8').margin({ top: 8 })
+            .fontSize(13).fontColor('#9CA3AF').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
@@ -1588,17 +1591,17 @@ export struct ChatPage {
       } else if (this.errorMsg !== '') {
         Column() {
           Text('连接不上')
-            .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+            .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           // 失败原因包含完整 URL、错误码和具体解释；长按可复制，方便直接发出来定位
           Text(this.errorMsg)
             .fontSize(12).fontColor('#dc2626')
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 12, left: 18, right: 18 })
-          Text('（长按上面这段可以复制）').fontSize(10).fontColor('#94a3b8').margin({ top: 6 })
+          Text('（长按上面这段可以复制）').fontSize(10).fontColor('#9CA3AF').margin({ top: 6 })
           Button('重试')
             .fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#3b82f6').fontColor('#ffffff')
+            .backgroundColor('#4D6BFE').fontColor('#ffffff')
             .padding({ left: 22, right: 22 })
             .margin({ top: 16 })
             .onClick(() => { this.bootstrap(); })
@@ -1607,16 +1610,21 @@ export struct ChatPage {
         .width('100%')
         .justifyContent(FlexAlign.Center)
       } else if (this.shown.length === 0) {
+        // 空会话：对齐 DeepSeek 官方 —— 居中鲸鱼 + 一句问候
         Column() {
-          // 用品牌标识代替 emoji：三个页面原本一个 🐾 一个 🗂️ 一个 😕，
-          // 各自风格还不一样，是「看着不统一」的主要来源之一。
-          Image($r('app.media.icon'))
-            .width(56).height(56).objectFit(ImageFit.Contain).opacity(0.18)
-          Text('还没有消息，在下面发一条试试').fontSize(13).fontColor('#94a3b8').margin({ top: 12 })
+          Text('🐳')
+            .fontSize(58)
+          Text('晚上好，有什么我能帮你的吗？')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#111111')
+            .margin({ top: 26 })
+            .textAlign(TextAlign.Center)
         }
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
+        .padding({ bottom: 120 })
       } else {
         List({ space: 12, scroller: this.listScroller }) {
           // 列表最上面：还有更早的消息时给一个入口
@@ -1624,10 +1632,10 @@ export struct ChatPage {
             ListItem() {
               Row() {
                 if (this.loadingOlder) {
-                  LoadingProgress().width(16).height(16).color('#94a3b8')
-                  Text('加载更早的消息…').fontSize(12).fontColor('#94a3b8').margin({ left: 6 })
+                  LoadingProgress().width(16).height(16).color('#9CA3AF')
+                  Text('加载更早的消息…').fontSize(12).fontColor('#9CA3AF').margin({ left: 6 })
                 } else {
-                  Text('↑ 加载更早的消息').fontSize(12).fontColor('#3b82f6')
+                  Text('↑ 加载更早的消息').fontSize(12).fontColor('#4D6BFE')
                 }
               }
               .width('100%')
@@ -1650,19 +1658,19 @@ export struct ChatPage {
                   // 代码块和表格内部是横向可滚的，不会撑破气泡。
                   MarkdownView({
                     text: (item.text !== undefined) ? item.text : '',
-                    isUser: item.role === 'user'
+                    // 用户气泡改成浅灰底 + 深色字（对齐 DeepSeek 官方对话样式），
+                    // 所以两种角色都走「非用户」配色，不再有白字。
+                    isUser: false
                   })
                 }
-                .padding({ left: 14, right: 14, top: 10, bottom: 10 })
-                // 助手气泡给白底 + 极细描边，页底用浅灰：比原来「浅灰气泡压浅灰底」
-                // 更有层次，长回答也不会糊成一片。
-                .backgroundColor(item.role === 'user' ? '#3b82f6' : '#ffffff')
-                .border({
-                  width: item.role === 'user' ? 0 : 1,
-                  color: '#eef2f7'
-                })
-                .borderRadius(16)
-                .constraintSize({ maxWidth: '84%' })
+                .padding(item.role === 'user'
+                  ? { left: 14, right: 14, top: 10, bottom: 10 }
+                  : { left: 2, right: 2, top: 6, bottom: 6 })
+                // 助手消息不套气泡：官方界面里回复是直接铺在页面上的正文，
+                // 只有用户的消息有底色，这样长回答的阅读感更接近网页版。
+                .backgroundColor(item.role === 'user' ? '#F3F4F6' : Color.Transparent)
+                .borderRadius(18)
+                .constraintSize({ maxWidth: '86%' })
                 .clip(true)
 
                 if (item.role === 'assistant' && item.interrupted === true) {
@@ -1679,9 +1687,9 @@ export struct ChatPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+        .padding({ left: 16, right: 16, top: 16, bottom: 16 })
         .edgeEffect(EdgeEffect.Spring)
-        .backgroundColor('#f7f8fa')
+        .backgroundColor('#FFFFFF')
         // 记住用户是不是停在底部：只有停在底部时才自动跟随新消息，
         // 否则轮询会每隔 1.5 秒把正在往上翻历史的用户拽回来。
         .onScrollIndex((firstIndex: number, lastIndex: number) => {

@@ -38,9 +38,19 @@ export struct ModelPage {
 
   /** 由父组件注入：选完模型跳回对话页。 */
   onPicked: () => void = () => {};
+  /** 由父组件注入：把选中的模型名回写给对话页顶部。 */
+  onSelected: (provider: string, model: string) => void = () => {};
 
   /** 是否已经加载过，避免来回切 Tab 反复请求。 */
   private loaded: boolean = false;
+  /** 组件是否已被移除。异步回来后据此决定还能不能写状态。 */
+  private gone: boolean = false;
+  /** 状态栏高度（px）：全屏下模型页也要避开状态栏。 */
+  @StorageProp('safeTopPx') safeTopPx: number = 0;
+
+  aboutToDisappear(): void {
+    this.gone = true;
+  }
 
   @State rows: ModelRow[] = [];
   @State efforts: ReasoningEffort[] = [];
@@ -125,13 +135,21 @@ export struct ModelPage {
     }
     this.switching = true;
     const res: Result<ModelsData> = await selectModel(this.sessionId, provider, model, effort);
+    // 请求回来时页面可能已经被关掉了（用户点了别处/父级把覆盖层移除），
+    // 这时候再写组件状态就会崩。所以先判断还用不用得着。
+    if (this.gone) {
+      return;
+    }
     this.switching = false;
     if (!res.ok) {
       promptAction.showToast({ message: res.error, duration: 3000 });
       return;
     }
     promptAction.showToast({ message: '已切换到 ' + model, duration: 1500 });
-    await this.load();
+    // 先把新模型名回写给对话页，再关页面
+    this.onSelected(provider, model);
+    // 关键：先关页面，不要再 await load()。
+    // 以前是「先 load 再 onPicked」，load 期间组件被父级摘掉 -> 销毁后写状态 -> 闪退。
     this.onPicked();
   }
 
@@ -152,7 +170,7 @@ export struct ModelPage {
               .padding({ left: 12, right: 12, top: 6, bottom: 6 })
               .margin({ right: 8 })
               .borderRadius(14)
-              .backgroundColor(this.current?.reasoningEffort === ef.id ? '#3b82f6' : '#f1f5f9')
+              .backgroundColor(this.current?.reasoningEffort === ef.id ? '#4D6BFE' : '#F3F4F6')
               .fontColor(this.current?.reasoningEffort === ef.id ? '#ffffff' : '#475569')
               .onClick(() => {
                 if (this.current !== undefined && this.current !== null && ef.id !== undefined) {
@@ -167,55 +185,63 @@ export struct ModelPage {
       }
       .width('100%')
       .backgroundColor('#ffffff')
-      .border({ width: { bottom: 1 }, color: '#eef2f7' })
+      .border({ width: { bottom: 1 }, color: '#EFEFEF' })
     }
   }
 
   build() {
     Column() {
-      // 顶部：结构跟对话页、会话页一致（主标题 16 粗 + 副信息 11 号）
-      // 三个页面页头固定 72 高，切 Tab 时正文起点不会上下跳。
-      Column() {
+      // 顶部：标题 + 右侧关闭（模型页现在是覆盖层，必须有退出的路）
+      Row() {
         Column() {
-          Text('模型').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+          Text('模型').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           Text(this.modelLabel)
-            .fontSize(11).fontColor('#3b82f6')
+            .fontSize(11).fontColor('#4D6BFE')
             .margin({ top: 6 })
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
         }
         .alignItems(HorizontalAlign.Start)
-        .width('100%')
+        .layoutWeight(1)
+
+        SymbolGlyph($r('sys.symbol.xmark'))
+          .fontSize(20)
+          .fontColor(['#6B7280'])
+          .padding(6)
+          .onClick(() => { this.onPicked(); })
       }
       .width('100%')
       .height(72)
-      .justifyContent(FlexAlign.Center)
-      .padding({ left: 16, right: 16 })
+      .alignItems(VerticalAlign.Center)
+      .padding({
+        left: 16, right: 12,
+        top: this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0
+      })
       .backgroundColor('#ffffff')
-      .border({ width: { bottom: 1 }, color: '#eef2f7' })
+      .border({ width: { bottom: 1 }, color: '#EFEFEF' })
 
       this.effortBar()
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(36).height(36).color('#3b82f6')
-          Text('加载模型列表…').fontSize(13).fontColor('#94a3b8').margin({ top: 8 })
+          LoadingProgress().width(36).height(36).color('#4D6BFE')
+          Text('加载模型列表…').fontSize(13).fontColor('#9CA3AF').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
       } else if (this.errorMsg !== '') {
         Column() {
-          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           // 最常见的一种失败：还没有当前会话。与其甩一串 409 no-session，
           // 不如直接说人话并给一个去挑会话的按钮。
           if (this.sessionId === '') {
-            Text('还没有选会话').fontSize(15).fontColor('#1e293b').margin({ top: 10 })
+            Text('还没有选会话').fontSize(15).fontColor('#1F2329').margin({ top: 10 })
             Text('模型的可用列表是按会话来的，先去「会话」页挑一个')
-              .fontSize(12).fontColor('#94a3b8')
+              .fontSize(12).fontColor('#9CA3AF')
               .textAlign(TextAlign.Center)
               .margin({ top: 6, left: 24, right: 24 })
             Button('去挑会话').fontSize(14).height(36).borderRadius(18)
-              .backgroundColor('#3b82f6').fontColor('#ffffff')
+              .backgroundColor('#4D6BFE').fontColor('#ffffff')
               .padding({ left: 22, right: 22 })
               .margin({ top: 16 })
               .onClick(() => { this.activeTab = 2; })
@@ -225,7 +251,7 @@ export struct ModelPage {
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 10, left: 18, right: 18 })
           Button('重试').fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#3b82f6').fontColor('#ffffff')
+            .backgroundColor('#4D6BFE').fontColor('#ffffff')
             .padding({ left: 22, right: 22 })
             .margin({ top: 16 })
             .onClick(() => { this.load(); })
@@ -239,17 +265,17 @@ export struct ModelPage {
             ListItem() {
               if (row.isHeader) {
                 Text(row.title)
-                  .fontSize(12).fontColor('#94a3b8')
+                  .fontSize(12).fontColor('#9CA3AF')
                   .width('100%')
                   .padding({ left: 16, right: 16, top: 14, bottom: 6 })
               } else {
                 Row() {
                   Column() {
                     Text(row.title).fontSize(15)
-                      .fontColor(row.isCurrent ? '#3b82f6' : '#1e293b')
+                      .fontColor(row.isCurrent ? '#4D6BFE' : '#1F2329')
                       .fontWeight(row.isCurrent ? FontWeight.Bold : FontWeight.Normal)
                       .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(row.sub).fontSize(11).fontColor('#94a3b8').margin({ top: 2 })
+                    Text(row.sub).fontSize(11).fontColor('#9CA3AF').margin({ top: 2 })
                   }
                   .alignItems(HorizontalAlign.Start)
                   .layoutWeight(1)
@@ -274,12 +300,12 @@ export struct ModelPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .divider({ strokeWidth: 1, color: '#f1f5f9' })
+        .divider({ strokeWidth: 1, color: '#F3F4F6' })
         .backgroundColor('#ffffff')
       }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#f8fafc')
+    .backgroundColor('#F8F8F8')
   }
 }

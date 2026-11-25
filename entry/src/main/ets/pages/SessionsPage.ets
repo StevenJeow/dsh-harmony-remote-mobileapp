@@ -99,8 +99,8 @@ export struct SessionsPage {
       // 顶部：结构跟对话页、模型页一致（主标题 16 粗 + 副信息 11 号，固定 72 高）
       Row() {
         Column() {
-          Text('会话').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
-          Text('共 ' + String(this.sessions.length) + ' 个').fontSize(11).fontColor('#94a3b8')
+          Text('会话').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
+          Text('共 ' + String(this.sessions.length) + ' 个').fontSize(11).fontColor('#9CA3AF')
             .margin({ top: 6 })
         }
         .alignItems(HorizontalAlign.Start)
@@ -109,14 +109,14 @@ export struct SessionsPage {
         Button('刷新')
           .fontSize(12).height(30).borderRadius(15)
           .padding({ left: 14, right: 14 })
-          .backgroundColor('#f1f5f9').fontColor('#475569')
+          .backgroundColor('#F3F4F6').fontColor('#475569')
           .margin({ right: 8 })
           .onClick(() => { this.load(); })
 
         Button(this.creating ? '新建中' : '新建')
           .fontSize(12).height(30).borderRadius(15)
           .padding({ left: 14, right: 14 })
-          .backgroundColor('#3b82f6').fontColor('#ffffff')
+          .backgroundColor('#4D6BFE').fontColor('#ffffff')
           .enabled(!this.creating)
           .onClick(() => { this.doCreate(); })
       }
@@ -125,25 +125,25 @@ export struct SessionsPage {
       .alignItems(VerticalAlign.Center)
       .padding({ left: 16, right: 16 })
       .backgroundColor('#ffffff')
-      .border({ width: { bottom: 1 }, color: '#eef2f7' })
+      .border({ width: { bottom: 1 }, color: '#EFEFEF' })
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(36).height(36).color('#3b82f6')
-          Text('加载会话列表…').fontSize(13).fontColor('#94a3b8').margin({ top: 8 })
+          LoadingProgress().width(36).height(36).color('#4D6BFE')
+          Text('加载会话列表…').fontSize(13).fontColor('#9CA3AF').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
       } else if (this.errorMsg !== '') {
         Column() {
-          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           Text(this.errorMsg).fontSize(12).fontColor('#dc2626')
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 10, left: 18, right: 18 })
           Button('重试').fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#3b82f6').fontColor('#ffffff')
+            .backgroundColor('#4D6BFE').fontColor('#ffffff')
             .padding({ left: 22, right: 22 })
             .margin({ top: 16 })
             .onClick(() => { this.load(); })
@@ -153,8 +153,8 @@ export struct SessionsPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.sessions.length === 0) {
         Column() {
-          Text('还没有会话').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
-          Text('点右上角「新建」开一个').fontSize(13).fontColor('#94a3b8').margin({ top: 8 })
+          Text('还没有会话').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
+          Text('点右上角「新建」开一个').fontSize(13).fontColor('#9CA3AF').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
@@ -169,7 +169,7 @@ export struct SessionsPage {
                     Text(sessionLabelOf(s))
                       .fontSize(15)
                       .fontWeight(s.sessionId === this.sessionId ? FontWeight.Bold : FontWeight.Normal)
-                      .fontColor(s.sessionId === this.sessionId ? '#3b82f6' : '#1e293b')
+                      .fontColor(s.sessionId === this.sessionId ? '#4D6BFE' : '#1F2329')
                       .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
                       .layoutWeight(1)
 
@@ -183,17 +183,17 @@ export struct SessionsPage {
                   .width('100%')
 
                   Text((s.cwd !== undefined && s.cwd !== '') ? s.cwd : '（无工作目录）')
-                    .fontSize(11).fontColor('#94a3b8')
+                    .fontSize(11).fontColor('#9CA3AF')
                     .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
                     .margin({ top: 4 })
 
                   Row() {
-                    Text(formatTime(s.updatedAt)).fontSize(11).fontColor('#94a3b8')
+                    Text(formatTime(s.updatedAt)).fontSize(11).fontColor('#9CA3AF')
                     if (s.agentPreset !== undefined && s.agentPreset !== '') {
-                      Text('· ' + s.agentPreset).fontSize(11).fontColor('#94a3b8').margin({ left: 6 })
+                      Text('· ' + s.agentPreset).fontSize(11).fontColor('#9CA3AF').margin({ left: 6 })
                     }
                     if (s.sessionId === this.sessionId) {
-                      Text('· 当前').fontSize(11).fontColor('#3b82f6').margin({ left: 6 })
+                      Text('· 当前').fontSize(11).fontColor('#4D6BFE').margin({ left: 6 })
                     }
                   }
                   .width('100%')
@@ -213,12 +213,12 @@ export struct SessionsPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .divider({ strokeWidth: 1, color: '#f1f5f9' })
+        .divider({ strokeWidth: 1, color: '#F3F4F6' })
         .backgroundColor('#ffffff')
       }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#f8fafc')
+    .backgroundColor('#F8F8F8')
   }
 }
