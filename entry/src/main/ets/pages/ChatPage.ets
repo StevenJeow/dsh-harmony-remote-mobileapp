@@ -1284,11 +1284,15 @@ export struct ChatPage {
     // 对齐 DeepSeek 官方：只有 ☰ 和右上两个图标，没有标题行、没有分割线
     // 注意：高度不能写死，必须用「状态栏高度 + 内容高度」，否则图标会被状态栏压住
     Row() {
-      Text('☰')
-        .fontSize(24)
-        .fontColor('#1F2329')
-        .padding({ left: 4, right: 12 })
-        .onClick(() => { this.onOpenSessionsTab(); })
+      // 每个控件独立成小气泡（参考截图：元素各自一个圆角块，不挤在一起）
+      Row() {
+        Text('☰').fontSize(22).fontColor('#1F2329')
+      }
+      .width(40).height(40)
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor('#F4F5F7')
+      .borderRadius(20)
+      .onClick(() => { this.onOpenSessionsTab(); })
 
       Blank()
 
@@ -1299,17 +1303,25 @@ export struct ChatPage {
         }.margin({ right: 10 })
       }
 
-      Text('⊘')
-        .fontSize(22)
-        .fontColor('#1F2329')
-        .padding({ left: 8, right: 8 })
-        .onClick(() => { this.loadAll(); })
+      Row() {
+        Text('⊘').fontSize(20).fontColor('#1F2329')
+      }
+      .width(40).height(40)
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor('#F4F5F7')
+      .borderRadius(20)
+      .margin({ left: 8 })
+      .onClick(() => { this.loadAll(); })
 
-      Text('⊕')
-        .fontSize(22)
-        .fontColor('#1F2329')
-        .padding({ left: 8, right: 4 })
-        .onClick(() => { this.onOpenSessionsTab(); })
+      Row() {
+        Text('⊕').fontSize(20).fontColor('#1F2329')
+      }
+      .width(40).height(40)
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor('#F4F5F7')
+      .borderRadius(20)
+      .margin({ left: 8 })
+      .onClick(() => { this.onOpenSessionsTab(); })
     }
     .width('100%')
     .height(52)
@@ -1418,95 +1430,74 @@ export struct ChatPage {
         .margin({ bottom: 8 })
       }
 
-      // 大圆角白卡：一行输入 + 下方胶囊按钮排（对齐 DeepSeek 官方输入区）
-      Column() {
-        TextInput({ text: this.input, placeholder: '发消息或按住说话' })
-          .width('100%')
-          .height(44)
-          .fontSize(16)
-          .fontColor('#1F2329')
-          .placeholderColor('#9CA3AF')
-          .backgroundColor(Color.Transparent)
-          .borderRadius(0)
-          .padding({ left: 4, right: 4 })
-          .onChange((value: string) => {
-            this.input = value;
-          })
-          .onSubmit((enterKey: EnterKeyType) => {
-            this.doSend();
-          })
-
-        Row() {
-          // 模型：显示当前模型名，点开模型页（对应官方的「深度思考」位置）
-          Row() {
-            Text('◍').fontSize(12).fontColor('#4D6BFE')
-            Text(this.modelLabel)
-              .fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
-              .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-              .constraintSize({ maxWidth: 120 })
-          }
-          .padding({ left: 12, right: 12, top: 7, bottom: 7 })
-          .backgroundColor('#EEF2FF')
-          .borderRadius(16)
-          .onClick(() => { this.toggleModelPicker(); })
-
-          // 会话：打开会话抽屉（对应官方的「智能搜索」位置）
-          Row() {
-            Text('◎').fontSize(12).fontColor('#4D6BFE')
-            Text('会话').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
-          }
-          .padding({ left: 12, right: 12, top: 7, bottom: 7 })
-          .backgroundColor('#EEF2FF')
-          .borderRadius(16)
-          .margin({ left: 8 })
-          .onClick(() => { this.onOpenSessionsTab(); })
-
-          Blank()
-
-          // ＋ 上传
-          Text('+')
-            .fontSize(24)
-            .fontColor('#6B7280')
-            .padding({ left: 8, right: 8 })
-            .onClick(() => { this.pickAndUpload(); })
-
-          // 发送 / 停止
-          if (this.running) {
-            Button(this.cancelling ? '停止中' : '停止')
-              .fontSize(13)
-              .height(32)
-              .padding({ left: 12, right: 12 })
-              .borderRadius(16)
-              .backgroundColor('#FEE2E2')
-              .fontColor('#DC2626')
-              .enabled(!this.cancelling)
-              .onClick(() => { this.doCancel(); })
-          } else {
-            Button() {
-              if (this.sending) {
-                Text('…').fontSize(15).fontColor('#ffffff')
-              } else {
-                Text('↑').fontSize(18).fontColor('#ffffff')
-              }
-            }
-            .height(32)
-            .width(32)
-            .padding(0)
-            .borderRadius(16)
-            .backgroundColor(this.canSend() && !this.sending ? '#4D6BFE' : '#E5E7EB')
-            .enabled(this.canSend() && !this.sending)
-            .onClick(() => { this.doSend(); })
-          }
-        }
+      // 输入框：自己独立成一个小气泡
+      TextInput({ text: this.input, placeholder: '继续这个任务…' })
         .width('100%')
-        .margin({ top: 2 })
+        .height(46)
+        .fontSize(16)
+        .fontColor('#1F2329')
+        .placeholderColor('#9CA3AF')
+        .backgroundColor('#F4F5F7')
+        .borderRadius(23)
+        .padding({ left: 16, right: 16 })
+        .onChange((value: string) => {
+          this.input = value;
+        })
+        .onSubmit((enterKey: EnterKeyType) => {
+          this.doSend();
+        })
+
+      // 下面一排：每个控件各自一个气泡，中间留空隙
+      Row() {
+        // ＋ 上传（独立圆形气泡）
+        Row() {
+          Text('+').fontSize(24).fontColor('#1F2329')
+        }
+        .width(42).height(42)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor('#F4F5F7')
+        .borderRadius(21)
+        .onClick(() => { this.pickAndUpload(); })
+
+        // 模型（独立胶囊气泡，点开下拉）
+        Row() {
+          Text(this.modelLabel)
+            .fontSize(13).fontColor('#1F2329')
+            .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+          Text('⌄').fontSize(12).fontColor('#6B7280').margin({ left: 6 })
+        }
+        .layoutWeight(1)
+        .height(42)
+        .padding({ left: 14, right: 12 })
+        .margin({ left: 8, right: 8 })
+        .backgroundColor('#F4F5F7')
+        .borderRadius(21)
+        .onClick(() => { this.toggleModelPicker(); })
+
+        // 发送 / 停止（独立圆形气泡）
+        if (this.running) {
+          Row() {
+            Text(this.cancelling ? '停' : '■').fontSize(14).fontColor('#DC2626')
+          }
+          .width(42).height(42)
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#FEE2E2')
+          .borderRadius(21)
+          .onClick(() => { this.doCancel(); })
+        } else {
+          Row() {
+            Text(this.sending ? '…' : '↑').fontSize(18).fontColor('#FFFFFF')
+          }
+          .width(42).height(42)
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor(this.canSend() && !this.sending ? '#4D6BFE' : '#E5E7EB')
+          .borderRadius(21)
+          .onClick(() => { this.doSend(); })
+        }
       }
       .width('100%')
-      .padding({ left: 14, right: 14, top: 10, bottom: 12 })
-      .backgroundColor('#FFFFFF')
-      .borderRadius(26)
-      .border({ width: 1, color: '#EFEFEF' })
-      .shadow({ radius: 18, color: 'rgba(0,0,0,0.06)', offsetY: 4 })
+      .margin({ top: 8 })
     }
     .width('100%')
     .padding({ left: 12, right: 12, top: 8, bottom: 10 })
