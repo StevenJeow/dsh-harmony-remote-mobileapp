@@ -109,7 +109,7 @@ export struct ChatPage {
   /** 自己量出来的系统栏高度（vp），全屏布局下用它留白 */
   @State topInset: number = 0;
   /** 输入框上方的模型下拉面板 */
-  @State modelOpen: boolean = false;
+  @State modelMenuVisible: boolean = false;
   @State modelGroups: ModelGroup[] = [];
   @State modelPicking: boolean = false;
   @State bottomInset: number = 0;
@@ -451,10 +451,9 @@ export struct ChatPage {
     }
     return raw;
   }
-  /** 点模型胶囊：展开/收起模型下拉面板（不跳页面）。 */
-  async toggleModelPicker(): Promise<void> {
-    this.modelOpen = !this.modelOpen;
-    if (!this.modelOpen || this.modelGroups.length > 0 || this.modelPicking) {
+  /** 点模型胶囊：确保模型目录已加载（菜单由 bindMenu 自己弹出）。 */
+  async ensureModelsLoaded(): Promise<void> {
+    if (this.modelGroups.length > 0 || this.modelPicking) {
       return;
     }
     this.modelPicking = true;
@@ -467,12 +466,30 @@ export struct ChatPage {
     this.modelPicking = false;
   }
 
-  /** 在面板里选中一个模型：立刻生效并收起面板。 */
+  /** 系统下拉菜单内容：按供应商分组列出模型。 */
+  @Builder
+  modelMenuBuilder() {
+    Menu() {
+      ForEach(this.modelGroups, (g: ModelGroup) => {
+        MenuItemGroup({ header: g.name !== undefined ? g.name : '' }) {
+          ForEach(g.models, (m: ModelInfo) => {
+            MenuItem({
+              content: m.name !== undefined ? m.name : (m.id !== undefined ? m.id : '')
+            })
+              .onClick(() => {
+                this.pickModel(g.id !== undefined ? g.id : '', m.id !== undefined ? m.id : '');
+              })
+          }, (m: ModelInfo) => (g.id !== undefined ? g.id : '') + '/' + (m.id !== undefined ? m.id : ''))
+        }
+      }, (g: ModelGroup) => g.id !== undefined ? g.id : '')
+    }
+  }
+
+  /** 在菜单里选中一个模型：立刻生效。 */
   async pickModel(provider: string, model: string): Promise<void> {
     const res: Result<SelectModelData> = await selectModel(this.sessionId, provider, model, '');
     if (res.ok) {
       this.modelLabel = modelLabelOf({ provider: provider, model: model });
-      this.modelOpen = false;
       promptAction.showToast({ message: '已切换到 ' + this.modelLabel });
     } else {
       promptAction.showToast({ message: res.error });
@@ -1390,59 +1407,7 @@ export struct ChatPage {
         .margin({ top: 8 })
       }
 
-      // 模型下拉面板：贴在输入框上方，选中或再点一次收起
-      if (this.modelOpen) {
-        Column() {
-          if (this.modelPicking) {
-            Row() {
-              LoadingProgress().width(16).height(16).color('#9CA3AF')
-              Text('读取模型目录…').fontSize(12).fontColor('#9CA3AF').margin({ left: 6 })
-            }.padding(14)
-          } else {
-            Scroll() {
-              Column() {
-                ForEach(this.modelGroups, (g: ModelGroup) => {
-                  Text(g.name !== undefined ? g.name : '')
-                    .fontSize(12).fontColor('#9CA3AF')
-                    .width('100%')
-                    .padding({ left: 14, right: 14, top: 10, bottom: 4 })
-                  ForEach(g.models, (m: ModelInfo) => {
-                    Row() {
-                      Column() {
-                        Text(m.name !== undefined ? m.name : (m.id !== undefined ? m.id : ''))
-                          .fontSize(14).fontColor('#1F2329')
-                          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-                        Text(m.id !== undefined ? m.id : '')
-                          .fontSize(12).fontColor('#9CA3AF')
-                          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-                          .margin({ top: 2 })
-                      }
-                      .alignItems(HorizontalAlign.Start)
-                      .layoutWeight(1)
-                    }
-                    .width('100%')
-                    .padding({ left: 14, right: 14, top: 9, bottom: 9 })
-                    .backgroundColor('#FFFFFF')
-                    .onClick(() => {
-                      this.pickModel(g.id !== undefined ? g.id : '', m.id !== undefined ? m.id : '');
-                    })
-                  }, (m: ModelInfo) => (g.id !== undefined ? g.id : '') + '/' + (m.id !== undefined ? m.id : ''))
-                }, (g: ModelGroup) => g.id !== undefined ? g.id : '')
-              }
-              .width('100%')
-            }
-            .width('100%')
-            .constraintSize({ maxHeight: 260 })
-            .scrollBar(BarState.Off)
-          }
-        }
-        .width('100%')
-        .backgroundColor('#FFFFFF')
-        .borderRadius(16)
-        .border({ width: 1, color: '#EFEFEF' })
-        .shadow({ radius: 16, color: 'rgba(0,0,0,0.08)', offsetY: 4 })
-        .margin({ bottom: 8 })
-      }
+      // 模型下拉面板已移除 —— 改用系统 bindMenu（挂在模型胶囊上，点击即弹）
 
       // 输入框：自己独立成一个小气泡
       TextInput({ text: this.input, placeholder: '继续这个任务…' })
@@ -1474,7 +1439,7 @@ export struct ChatPage {
         .borderRadius(20)
         .margin({ right: 8 })
         .onClick(() => { this.pickAndUpload(); })
-        // 模型（独立胶囊气泡，点开下拉）
+        // 模型（独立胶囊气泡，点击弹系统下拉菜单）
         Row() {
           Text(this.productName())
             .fontSize(14).fontColor('#1F2329')
@@ -1488,7 +1453,16 @@ export struct ChatPage {
         .margin({ left: 8, right: 8 })
         .backgroundColor('#F4F5F7')
         .borderRadius(20)
-        .onClick(() => { this.toggleModelPicker(); })
+        .bindMenu(this.modelMenuBuilder(), {
+          isShow: $$this.modelMenuVisible,
+          onDisappear: () => { this.modelMenuVisible = false; }
+        })
+        .onClick(async () => {
+          if (this.modelGroups.length === 0) {
+            await this.ensureModelsLoaded();
+          }
+          this.modelMenuVisible = true;
+        })
 
         // 发送 / 停止（独立圆形气泡）
         if (this.running) {

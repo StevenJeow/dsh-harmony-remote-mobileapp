@@ -35,7 +35,6 @@ export struct SessionDrawer {
   onPicked: () => void = () => {};
   /** 打开模型页。 */
   onOpenModel: () => void = () => {};
-
   @State sessions: SessionInfo[] = [];
   @State loading: boolean = true;
   @State creating: boolean = false;
@@ -272,7 +271,7 @@ export struct SessionDrawer {
 
       Divider().color('#EFEFEF')
 
-      // 底部：本机遥控行（不写死任何账号，只显示当前模型 + 入口）
+      // 底部：本机遥控行（纯展示，模型切换在对话页底部胶囊上）
       Row() {
         Column() {
           Text('本机遥控').fontSize(14).fontColor('#1F2329')
@@ -283,13 +282,9 @@ export struct SessionDrawer {
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
-        SymbolGlyph($r('sys.symbol.chevron_right'))
-          .fontSize(16)
-          .fontColor(['#9CA3AF'])
       }
       .width('100%')
       .padding({ left: 18, right: 18, top: 14, bottom: 18 })
-      .onClick(() => { this.onOpenModel(); })
     }
     .width('100%')
     .height('100%')
