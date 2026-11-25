@@ -1311,6 +1311,12 @@ export struct ChatPage {
    * 固定高 72：切 Tab 时内容区的起点不会上下跳，这一点以前是乱的
    * （品牌栏 46 + 对话页 60 / 模型页 60+档位栏 / 会话页 60，三页各不相同）。
    */
+  /** 顶部安全区（vp）：优先取实测值，AppStorage 兜底（避免首帧闪烁）。 */
+  effectiveTop(): number {
+    const fromStorage: number = this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0;
+    return Math.max(this.topInset, fromStorage);
+  }
+
   @Builder
   header() {
     // 对齐 DeepSeek 官方：只有 ☰ 和右上两个图标，没有标题行、没有分割线
@@ -1356,8 +1362,8 @@ export struct ChatPage {
       .onClick(() => { this.onOpenSessionsTab(); })
     }
     .width('100%')
-    .height(52)
-    .padding({ left: 16, right: 16 })
+    .height(52 + this.effectiveTop())
+    .padding({ left: 16, right: 16, top: this.effectiveTop() })
     .backgroundColor('#FFFFFF')
   }
 
