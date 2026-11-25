@@ -1341,7 +1341,6 @@ export struct ChatPage {
     .width('100%')
     .height(52)
     .padding({ left: 16, right: 16 })
-    .margin({ top: this.topInset > 0 ? this.topInset : (this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0) })
     .backgroundColor('#ffffff')
   }
 
@@ -1465,6 +1464,16 @@ export struct ChatPage {
       // 下面一排：每个控件各自一个气泡，中间留空隙
       Row() {
 
+        // ＋ 上传（独立圆形气泡）—— 上传文件是必要功能
+        Row() {
+          Text('+').fontSize(24).fontColor('#1F2329')
+        }
+        .width(42).height(42)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor('#F4F5F7')
+        .borderRadius(21)
+        .margin({ right: 8 })
+        .onClick(() => { this.pickAndUpload(); })
         // 模型（独立胶囊气泡，点开下拉）
         Row() {
           Text(this.productName())
@@ -1506,8 +1515,8 @@ export struct ChatPage {
       .margin({ top: 8 })
     }
     .width('100%')
-    .padding({ left: 12, right: 12, top: 8, bottom: 10 })
-    .margin({ bottom: this.bottomInset > 0 ? this.bottomInset : (this.safeBottomPx > 0 ? px2vp(this.safeBottomPx) : 0) })
+    // 底部留出系统手势条高度：放在 padding 里（不是 margin），键盘弹出时不会多出一条白带
+    .padding({ left: 12, right: 12, top: 8, bottom: this.bottomInset + 8 })
     .backgroundColor('#ffffff')
   }
 
