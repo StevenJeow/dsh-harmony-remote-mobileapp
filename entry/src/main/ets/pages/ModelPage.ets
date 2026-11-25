@@ -140,7 +140,7 @@ export struct ModelPage {
     if (this.efforts.length > 0 && this.current !== undefined) {
       Column() {
         Row() {
-          Text('推理档位').fontSize(12).fontColor('#64748b')
+          Text('推理档位').fontSize(12).fontColor('#8C8C8C')
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 10, bottom: 6 })
@@ -151,9 +151,9 @@ export struct ModelPage {
               .fontSize(12)
               .padding({ left: 12, right: 12, top: 6, bottom: 6 })
               .margin({ right: 8 })
-              .borderRadius(14)
-              .backgroundColor(this.current?.reasoningEffort === ef.id ? '#3b82f6' : '#f1f5f9')
-              .fontColor(this.current?.reasoningEffort === ef.id ? '#ffffff' : '#475569')
+              .borderRadius(12)
+              .backgroundColor(this.current?.reasoningEffort === ef.id ? '#00559E' : '#F5F7FA')
+              .fontColor(this.current?.reasoningEffort === ef.id ? '#ffffff' : '#8C8C8C')
               .onClick(() => {
                 if (this.current !== undefined && this.current !== null && ef.id !== undefined) {
                   this.doSelect(this.current.provider !== undefined ? this.current.provider : '',
@@ -167,7 +167,7 @@ export struct ModelPage {
       }
       .width('100%')
       .backgroundColor('#ffffff')
-      .border({ width: { bottom: 1 }, color: '#eef2f7' })
+      .border({ width: { bottom: 1 }, color: '#F5F7FA' })
     }
   }
 
@@ -177,9 +177,9 @@ export struct ModelPage {
       // 三个页面页头固定 72 高，切 Tab 时正文起点不会上下跳。
       Column() {
         Column() {
-          Text('模型').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+          Text('模型').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1A1A1A')
           Text(this.modelLabel)
-            .fontSize(11).fontColor('#3b82f6')
+            .fontSize(12).fontColor('#00559E')
             .margin({ top: 6 })
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
         }
@@ -191,31 +191,31 @@ export struct ModelPage {
       .justifyContent(FlexAlign.Center)
       .padding({ left: 16, right: 16 })
       .backgroundColor('#ffffff')
-      .border({ width: { bottom: 1 }, color: '#eef2f7' })
+      .border({ width: { bottom: 1 }, color: '#F5F7FA' })
 
       this.effortBar()
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(36).height(36).color('#3b82f6')
-          Text('加载模型列表…').fontSize(13).fontColor('#94a3b8').margin({ top: 8 })
+          LoadingProgress().width(36).height(36).color('#00559E')
+          Text('加载模型列表…').fontSize(14).fontColor('#8C8C8C').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
       } else if (this.errorMsg !== '') {
         Column() {
-          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1e293b')
+          Text('加载失败').fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1A1A1A')
           // 最常见的一种失败：还没有当前会话。与其甩一串 409 no-session，
           // 不如直接说人话并给一个去挑会话的按钮。
           if (this.sessionId === '') {
-            Text('还没有选会话').fontSize(15).fontColor('#1e293b').margin({ top: 10 })
+            Text('还没有选会话').fontSize(16).fontColor('#1A1A1A').margin({ top: 10 })
             Text('模型的可用列表是按会话来的，先去「会话」页挑一个')
-              .fontSize(12).fontColor('#94a3b8')
+              .fontSize(12).fontColor('#8C8C8C')
               .textAlign(TextAlign.Center)
               .margin({ top: 6, left: 24, right: 24 })
-            Button('去挑会话').fontSize(14).height(36).borderRadius(18)
-              .backgroundColor('#3b82f6').fontColor('#ffffff')
+            Button('去挑会话').fontSize(14).height(36).borderRadius(16)
+              .backgroundColor('#00559E').fontColor('#ffffff')
               .padding({ left: 22, right: 22 })
               .margin({ top: 16 })
               .onClick(() => { this.activeTab = 2; })
@@ -224,8 +224,8 @@ export struct ModelPage {
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 10, left: 18, right: 18 })
-          Button('重试').fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#3b82f6').fontColor('#ffffff')
+          Button('重试').fontSize(14).height(36).borderRadius(16)
+            .backgroundColor('#00559E').fontColor('#ffffff')
             .padding({ left: 22, right: 22 })
             .margin({ top: 16 })
             .onClick(() => { this.load(); })
@@ -239,30 +239,30 @@ export struct ModelPage {
             ListItem() {
               if (row.isHeader) {
                 Text(row.title)
-                  .fontSize(12).fontColor('#94a3b8')
+                  .fontSize(12).fontColor('#8C8C8C')
                   .width('100%')
                   .padding({ left: 16, right: 16, top: 14, bottom: 6 })
               } else {
                 Row() {
                   Column() {
-                    Text(row.title).fontSize(15)
-                      .fontColor(row.isCurrent ? '#3b82f6' : '#1e293b')
+                    Text(row.title).fontSize(16)
+                      .fontColor(row.isCurrent ? '#00559E' : '#1A1A1A')
                       .fontWeight(row.isCurrent ? FontWeight.Bold : FontWeight.Normal)
                       .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(row.sub).fontSize(11).fontColor('#94a3b8').margin({ top: 2 })
+                    Text(row.sub).fontSize(12).fontColor('#8C8C8C').margin({ top: 2 })
                   }
                   .alignItems(HorizontalAlign.Start)
                   .layoutWeight(1)
 
                   if (row.isCurrent) {
-                    Text('使用中').fontSize(11).fontColor('#10b981')
+                    Text('使用中').fontSize(12).fontColor('#10b981')
                   } else {
-                    Text('›').fontSize(18).fontColor('#cbd5e1')
+                    Text('›').fontSize(20).fontColor('#B0B0B0')
                   }
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16, top: 12, bottom: 12 })
-                .backgroundColor(row.isCurrent ? '#eff6ff' : '#ffffff')
+                .backgroundColor(row.isCurrent ? '#EAF3FA' : '#ffffff')
                 .onClick(() => {
                   if (!row.isCurrent) {
                     this.doSelect(row.provider, row.model, '');
@@ -274,12 +274,12 @@ export struct ModelPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .divider({ strokeWidth: 1, color: '#f1f5f9' })
+        .divider({ strokeWidth: 1, color: '#F5F7FA' })
         .backgroundColor('#ffffff')
       }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#f8fafc')
+    .backgroundColor('#F5F7FA')
   }
 }

@@ -375,9 +375,9 @@ export function parseMarkdown(src: string): MdBlock[] {
  * ========================================================================== */
 
 /** 代码块的配色（固定深色，浅色模式下也清晰）。 */
-const CODE_BG: string = '#1e293b';
-const CODE_FG: string = '#e2e8f0';
-const LINK_FG: string = '#3b82f6';
+const CODE_BG: string = '#1E293B';
+const CODE_FG: string = '#E5E7EB';
+const LINK_FG: string = '#00559E';
 
 @Component
 export struct MarkdownView {
@@ -399,12 +399,12 @@ export struct MarkdownView {
   /** 行内文本的颜色：用户气泡里是白字，助手气泡里是深字；代码/链接各有自己的色。 */
   inlineColor(span: MdInline): string {
     if (span.link) {
-      return this.isUser ? '#bfdbfe' : LINK_FG;
+      return this.isUser ? '#B3D4EB' : LINK_FG;
     }
     if (span.code) {
-      return this.isUser ? '#fde68a' : '#b45309';
+      return this.isUser ? '#fde68a' : '#B45309';
     }
-    return this.isUser ? '#ffffff' : '#1e293b';
+    return this.isUser ? '#ffffff' : '#1A1A1A';
   }
 
   /** 标题字号随层级递减。 */
@@ -460,7 +460,7 @@ export struct MarkdownView {
                       ForEach(parseInline(cell), (cs: MdInline, csi: number) => {
                         Span(cs.text)
                           .fontSize(12)
-                          .fontColor(cs.code ? '#b45309' : (ri === 0 ? '#1e293b' : '#334155'))
+                          .fontColor(cs.code ? '#B45309' : (ri === 0 ? '#1A1A1A' : '#1A1A1A'))
                           .fontWeight((cs.bold || ri === 0) ? FontWeight.Bold : FontWeight.Normal)
                           .fontStyle(cs.italic ? FontStyle.Italic : FontStyle.Normal)
                           .fontFamily(cs.code ? 'monospace' : '')
@@ -472,8 +472,8 @@ export struct MarkdownView {
                     .padding({ left: 8, right: 8, top: 5, bottom: 5 })
                   }, (cell: string, ci: number) => String(ci) + '-' + cell)
                 }
-                .backgroundColor(ri === 0 ? '#eef2f7' : '#ffffff')
-                .border({ width: { bottom: 1 }, color: '#e2e8f0' })
+                .backgroundColor(ri === 0 ? '#F5F7FA' : '#ffffff')
+                .border({ width: { bottom: 1 }, color: '#E5E7EB' })
               }, (row: string, ri: number) => String(ri) + '-' + row)
             }
             .alignItems(HorizontalAlign.Start)
@@ -482,18 +482,18 @@ export struct MarkdownView {
           .scrollBar(BarState.Auto)
           .constraintSize({ maxWidth: '100%' })
           .borderRadius(8)
-          .border({ width: 1, color: '#e2e8f0' })
+          .border({ width: 1, color: '#E5E7EB' })
           .margin({ top: 6, bottom: 6 })
 
         } else if (block.kind === 'rule') {
-          Divider().color(this.isUser ? '#93c5fd' : '#e2e8f0').margin({ top: 8, bottom: 8 })
+          Divider().color(this.isUser ? '#4A90D9' : '#E5E7EB').margin({ top: 8, bottom: 8 })
 
         } else if (block.kind === 'list') {
           // 列表：用一个 Text + 多个 Span，项之间用换行符连接
           Text() {
             ForEach(block.inline, (span: MdInline, si: number) => {
               Span(span.text)
-                .fontSize(15)
+                .fontSize(16)
                 .fontColor(this.inlineColor(span))
                 .fontWeight(span.bold ? FontWeight.Bold : FontWeight.Normal)
                 .fontStyle(span.italic ? FontStyle.Italic : FontStyle.Normal)
@@ -533,7 +533,7 @@ export struct MarkdownView {
             ? { left: 10, top: 4, bottom: 4 }
             : { top: block.kind === 'h' ? 6 : 0, bottom: block.kind === 'h' ? 2 : 0 })
           .border(block.kind === 'quote'
-            ? { width: { left: 3 }, color: this.isUser ? '#bfdbfe' : '#cbd5e1' }
+            ? { width: { left: 3 }, color: this.isUser ? '#B3D4EB' : '#E5E7EB' }
             : { width: 0 })
           .textAlign(TextAlign.Start)
         }

@@ -83,8 +83,8 @@ struct Index {
         .height(22)
         .objectFit(ImageFit.Contain)
         .opacity(this.activeTab === 0 ? 1 : 0.32)
-      Text('对话').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 0 ? '#3b82f6' : '#94a3b8')
+      Text('对话').fontSize(12).margin({ top: 2 })
+        .fontColor(this.activeTab === 0 ? '#00559E' : '#8C8C8C')
     }
     .width('100%')
     .height(56)
@@ -95,12 +95,12 @@ struct Index {
   tabBarModel() {
     Column() {
       if (this.activeTab === 1) {
-        SymbolGlyph($r('sys.symbol.wand_and_stars_fill')).fontSize(22).fontColor(['#3b82f6'])
+        SymbolGlyph($r('sys.symbol.wand_and_stars_fill')).fontSize(20).fontColor(['#00559E'])
       } else {
-        SymbolGlyph($r('sys.symbol.wand_and_stars')).fontSize(22).fontColor(['#94a3b8'])
+        SymbolGlyph($r('sys.symbol.wand_and_stars')).fontSize(20).fontColor(['#8C8C8C'])
       }
-      Text('模型').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 1 ? '#3b82f6' : '#94a3b8')
+      Text('模型').fontSize(12).margin({ top: 2 })
+        .fontColor(this.activeTab === 1 ? '#00559E' : '#8C8C8C')
     }
     .width('100%')
     .height(56)
@@ -111,12 +111,12 @@ struct Index {
   tabBarSessions() {
     Column() {
       if (this.activeTab === 2) {
-        SymbolGlyph($r('sys.symbol.clock_fill')).fontSize(22).fontColor(['#3b82f6'])
+        SymbolGlyph($r('sys.symbol.clock_fill')).fontSize(20).fontColor(['#00559E'])
       } else {
-        SymbolGlyph($r('sys.symbol.clock')).fontSize(22).fontColor(['#94a3b8'])
+        SymbolGlyph($r('sys.symbol.clock')).fontSize(20).fontColor(['#8C8C8C'])
       }
-      Text('会话').fontSize(11).margin({ top: 2 })
-        .fontColor(this.activeTab === 2 ? '#3b82f6' : '#94a3b8')
+      Text('会话').fontSize(12).margin({ top: 2 })
+        .fontColor(this.activeTab === 2 ? '#00559E' : '#8C8C8C')
     }
     .width('100%')
     .height(56)
@@ -128,7 +128,7 @@ struct Index {
       if (!this.booted) {
         // 读配置的那几毫秒：给个转圈，别让用户看见半截界面
         Column() {
-          LoadingProgress().width(32).height(32).color('#3b82f6')
+          LoadingProgress().width(32).height(32).color('#00559E')
         }
         .width('100%')
         .height('100%')
@@ -148,7 +148,7 @@ struct Index {
           Row() {
             Text('注意：系统未放行明文 HTTP（cleartext）。请在 module.json5 里挂载 network_config。')
               .fontSize(12)
-              .fontColor('#92400e')
+              .fontColor('#B45309')
               .layoutWeight(1)
           }
           .width('100%')

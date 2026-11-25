@@ -69,25 +69,25 @@ export struct SetupPage {
           .margin({ top: 56 })
 
         Text('DSH 遥控器')
-          .fontSize(22)
+          .fontSize(20)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#1e293b')
+          .fontColor('#1A1A1A')
           .margin({ top: 14 })
 
         Text('第一次使用，先填一下电脑上的服务地址')
-          .fontSize(13)
-          .fontColor('#64748b')
+          .fontSize(14)
+          .fontColor('#8C8C8C')
           .margin({ top: 8 })
 
         // 表单
         Column() {
           Text('服务地址')
-            .fontSize(12).fontColor('#94a3b8')
+            .fontSize(12).fontColor('#8C8C8C')
             .width('100%')
             .margin({ top: 28 })
           TextInput({ text: this.url, placeholder: 'http://192.168.1.9:3100' })
-            .width('100%').height(44).fontSize(15)
-            .backgroundColor('#f1f5f9').borderRadius(12)
+            .width('100%').height(44).fontSize(16)
+            .backgroundColor('#F5F7FA').borderRadius(12)
             .padding({ left: 14, right: 14 })
             .margin({ top: 8 })
             .onChange((value: string) => {
@@ -95,19 +95,19 @@ export struct SetupPage {
             })
 
           Text('访问令牌')
-            .fontSize(12).fontColor('#94a3b8')
+            .fontSize(12).fontColor('#8C8C8C')
             .width('100%')
             .margin({ top: 18 })
           TextInput({ text: this.token, placeholder: '与电脑端 cordis.patch.yml 里的 token 一致' })
-            .width('100%').height(44).fontSize(15)
-            .backgroundColor('#f1f5f9').borderRadius(12)
+            .width('100%').height(44).fontSize(16)
+            .backgroundColor('#F5F7FA').borderRadius(12)
             .padding({ left: 14, right: 14 })
             .margin({ top: 8 })
             .onChange((value: string) => {
               this.token = value;
             })
           Text('电脑端插件绑在 0.0.0.0 时必须填；只在本机用、绑 127.0.0.1 的可以留空')
-            .fontSize(11).fontColor('#94a3b8')
+            .fontSize(12).fontColor('#8C8C8C')
             .width('100%')
             .margin({ top: 8 })
 
@@ -120,8 +120,8 @@ export struct SetupPage {
 
           Button(this.saving ? '保存中…' : '保存并连接')
             .width('100%').height(46).fontSize(16)
-            .borderRadius(23)
-            .backgroundColor(this.saving ? '#93c5fd' : '#3b82f6')
+            .borderRadius(16)
+            .backgroundColor(this.saving ? '#4A90D9' : '#00559E')
             .fontColor('#ffffff')
             .enabled(!this.saving)
             .margin({ top: 28 })
@@ -134,10 +134,10 @@ export struct SetupPage {
         // 底部说明
         Column() {
           Text('手机要和电脑连同一个 Wi-Fi。')
-            .fontSize(11).fontColor('#94a3b8')
+            .fontSize(12).fontColor('#8C8C8C')
             .textAlign(TextAlign.Center)
           Text('地址填错连不上时，在对话页的错误提示里点「改地址」可以重新填。')
-            .fontSize(11).fontColor('#94a3b8')
+            .fontSize(12).fontColor('#8C8C8C')
             .textAlign(TextAlign.Center)
             .margin({ top: 4 })
         }
