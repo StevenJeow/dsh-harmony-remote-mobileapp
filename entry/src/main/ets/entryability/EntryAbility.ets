@@ -43,11 +43,10 @@ export default class EntryAbility extends UIAbility {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;
       }
-      // 全屏 + 把系统栏高度传给页面，由页面自己留内边距。
-      // 只全屏不留边距会让标题顶穿状态栏（上一版就是这么坏的）。
+      // 全屏布局（周总要求）：内容画到屏幕最上/最下，系统栏区域由页面自己留白。
       windowStage.getMainWindow().then((win: window.Window) => {
         win.setWindowLayoutFullScreen(true).catch(() => {});
-        // 状态栏/手势条也刷成白色，跟页面同色，顶部不会出现一条异色空栏
+        // 状态栏/手势条刷成白色，跟页面同色
         win.setWindowSystemBarProperties({
           statusBarColor: '#00000000',
           navigationBarColor: '#00000000',

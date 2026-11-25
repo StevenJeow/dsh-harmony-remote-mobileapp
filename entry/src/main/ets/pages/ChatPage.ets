@@ -10,7 +10,7 @@
  * 让服务端按它的自动选择规则（显式 > 本部署自己且已 attach > 恰好一个 agent）
  * 挑一个回来，再写进 this.sessionId（@Link，会同步给另外两个 Tab）。
  */
-import { promptAction } from '@kit.ArkUI';
+import { promptAction, window } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { MarkdownView } from '../common/MarkdownView';
@@ -106,6 +106,10 @@ export struct ChatPage {
   @StorageProp(SHARE_TICK_KEY) @Watch('onShareTick') shareTick: number = 0;
   /** 状态栏高度（px）：全屏后内容要避开状态栏，否则标题被遮挡。 */
   @StorageProp('safeTopPx') safeTopPx: number = 0;
+  /** 自己量出来的系统栏高度（vp），全屏布局下用它留白 */
+  @State topInset: number = 0;
+  @State bottomInset: number = 0;
+  @StorageProp('safeBottomPx') safeBottomPx: number = 0;
 
   /**
    * 消息容器：**已加载过的内容全都留在这里，只增不减**。
@@ -223,6 +227,22 @@ export struct ChatPage {
     this.bootstrap();
     // 同时开一条长轮询，接收 DSH 的审批 / ask_user_question 确认
     this.startEventLoop();
+    // 全屏布局下自己算安全区：启动时那个 AppStorage 变量有时序竞争，
+    // 这里直接向窗口要一次，保证 ☰ 不被状态栏压住、输入框不被手势条裁掉。
+    this.measureInsets();
+  }
+
+  /** 读取系统栏高度（vp），用于页面顶部/底部留白。 */
+  private measureInsets(): void {
+    try {
+      window.getLastWindow(getContext(this)).then((win: window.Window) => {
+        const area: window.AvoidArea = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
+        this.topInset = px2vp(area.topRect.height);
+        this.bottomInset = px2vp(area.bottomRect.height);
+      }).catch(() => {
+      });
+    } catch (e) {
+    }
   }
 
   aboutToDisappear(): void {
@@ -1222,11 +1242,12 @@ export struct ChatPage {
   @Builder
   header() {
     // 对齐 DeepSeek 官方：只有 ☰ 和右上两个图标，没有标题行、没有分割线
+    // 注意：高度不能写死，必须用「状态栏高度 + 内容高度」，否则图标会被状态栏压住
     Row() {
       Text('☰')
         .fontSize(24)
         .fontColor('#1F2329')
-        .padding({ left: 4, right: 12, top: 4, bottom: 4 })
+        .padding({ left: 4, right: 12 })
         .onClick(() => { this.onOpenSessionsTab(); })
 
       Blank()
@@ -1252,10 +1273,8 @@ export struct ChatPage {
     }
     .width('100%')
     .height(52)
-    .padding({
-      left: 16, right: 16,
-      top: this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0
-    })
+    .padding({ left: 16, right: 16 })
+    .margin({ top: this.topInset > 0 ? this.topInset : (this.safeTopPx > 0 ? px2vp(this.safeTopPx) : 0) })
     .backgroundColor('#ffffff')
   }
 
@@ -1394,6 +1413,7 @@ export struct ChatPage {
     }
     .width('100%')
     .padding({ left: 12, right: 12, top: 8, bottom: 10 })
+    .margin({ bottom: this.bottomInset > 0 ? this.bottomInset : (this.safeBottomPx > 0 ? px2vp(this.safeBottomPx) : 0) })
     .backgroundColor('#ffffff')
   }
 

@@ -112,7 +112,7 @@ struct Index {
     .width('100%')
     .height('100%')
     .backgroundColor('#FFFFFF')
-    // 内容直接画到屏幕最上沿/最下沿，盖住系统栏，彻底消除上下空栏
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+    // 不再画到系统栏下面：交给系统留安全区，
+    // 否则顶栏图标被状态栏压住、底部输入框被手势条裁掉。
   }
 }
