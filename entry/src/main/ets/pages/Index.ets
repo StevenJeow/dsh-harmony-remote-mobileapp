@@ -109,8 +109,8 @@ struct Index {
             Column()
               .width(36)
               .height(4)
-              .borderRadius(2)
-              .backgroundColor('#E5E7EB')
+              .borderRadius(8)
+              .backgroundColor('#EFEFEF')
           }
           .width('100%')
           .justifyContent(FlexAlign.Center)

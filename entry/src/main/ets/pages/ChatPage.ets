@@ -1301,7 +1301,7 @@ export struct ChatPage {
     Row() {
       // 每个控件独立成小气泡（参考截图：元素各自一个圆角块，不挤在一起）
       Row() {
-        Text('☰').fontSize(22).fontColor('#1F2329')
+        Text('☰').fontSize(20).fontColor('#1F2329')
       }
       .width(40).height(40)
       .justifyContent(FlexAlign.Center)
@@ -1313,8 +1313,8 @@ export struct ChatPage {
 
       if (this.running) {
         Row() {
-          Circle({ width: 6, height: 6 }).fill('#10b981')
-          Text('运行中').fontSize(11).fontColor('#10b981').margin({ left: 4 })
+          Circle({ width: 6, height: 6 }).fill('#10B981')
+          Text('运行中').fontSize(12).fontColor('#10B981').margin({ left: 4 })
         }.margin({ right: 10 })
       }
 
@@ -1341,7 +1341,7 @@ export struct ChatPage {
     .width('100%')
     .height(52)
     .padding({ left: 16, right: 16 })
-    .backgroundColor('#ffffff')
+    .backgroundColor('#FFFFFF')
   }
 
   /** 底部输入区。 */
@@ -1360,8 +1360,8 @@ export struct ChatPage {
             ListItem() {
               Row() {
                 Text(item.name !== undefined ? item.name : '文件')
-                  .fontSize(11)
-                  .fontColor('#475569')
+                  .fontSize(12)
+                  .fontColor('#9CA3AF')
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .constraintSize({ maxWidth: 140 })
@@ -1376,7 +1376,7 @@ export struct ChatPage {
               }
               .padding({ left: 10, right: 10, top: 5, bottom: 5 })
               .backgroundColor('#EFEFEF')
-              .borderRadius(14)
+              .borderRadius(12)
             }
           }, (item: UploadedFileInfo, index: number) => {
             return String(item.relPath) + '-' + String(index);
@@ -1403,7 +1403,7 @@ export struct ChatPage {
               Column() {
                 ForEach(this.modelGroups, (g: ModelGroup) => {
                   Text(g.name !== undefined ? g.name : '')
-                    .fontSize(11).fontColor('#9CA3AF')
+                    .fontSize(12).fontColor('#9CA3AF')
                     .width('100%')
                     .padding({ left: 14, right: 14, top: 10, bottom: 4 })
                   ForEach(g.models, (m: ModelInfo) => {
@@ -1413,7 +1413,7 @@ export struct ChatPage {
                           .fontSize(14).fontColor('#1F2329')
                           .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
                         Text(m.id !== undefined ? m.id : '')
-                          .fontSize(11).fontColor('#9CA3AF')
+                          .fontSize(12).fontColor('#9CA3AF')
                           .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
                           .margin({ top: 2 })
                       }
@@ -1438,7 +1438,7 @@ export struct ChatPage {
         }
         .width('100%')
         .backgroundColor('#FFFFFF')
-        .borderRadius(18)
+        .borderRadius(16)
         .border({ width: 1, color: '#EFEFEF' })
         .shadow({ radius: 16, color: 'rgba(0,0,0,0.08)', offsetY: 4 })
         .margin({ bottom: 8 })
@@ -1452,7 +1452,7 @@ export struct ChatPage {
         .fontColor('#1F2329')
         .placeholderColor('#9CA3AF')
         .backgroundColor('#F4F5F7')
-        .borderRadius(23)
+        .borderRadius(24)
         .padding({ left: 16, right: 16 })
         .onChange((value: string) => {
           this.input = value;
@@ -1471,23 +1471,23 @@ export struct ChatPage {
         .width(42).height(42)
         .justifyContent(FlexAlign.Center)
         .backgroundColor('#F4F5F7')
-        .borderRadius(21)
+        .borderRadius(20)
         .margin({ right: 8 })
         .onClick(() => { this.pickAndUpload(); })
         // 模型（独立胶囊气泡，点开下拉）
         Row() {
           Text(this.productName())
-            .fontSize(13).fontColor('#1F2329')
+            .fontSize(14).fontColor('#1F2329')
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
             .layoutWeight(1)
-          Text('⌄').fontSize(12).fontColor('#6B7280').margin({ left: 6 })
+          Text('⌄').fontSize(12).fontColor('#9CA3AF').margin({ left: 6 })
         }
         .layoutWeight(1)
         .height(42)
         .padding({ left: 14, right: 12 })
         .margin({ left: 8, right: 8 })
         .backgroundColor('#F4F5F7')
-        .borderRadius(21)
+        .borderRadius(20)
         .onClick(() => { this.toggleModelPicker(); })
 
         // 发送 / 停止（独立圆形气泡）
@@ -1498,16 +1498,16 @@ export struct ChatPage {
           .width(42).height(42)
           .justifyContent(FlexAlign.Center)
           .backgroundColor('#FEE2E2')
-          .borderRadius(21)
+          .borderRadius(20)
           .onClick(() => { this.doCancel(); })
         } else {
           Row() {
-            Text(this.sending ? '…' : '↑').fontSize(18).fontColor('#FFFFFF')
+            Text(this.sending ? '…' : '↑').fontSize(20).fontColor('#FFFFFF')
           }
           .width(42).height(42)
           .justifyContent(FlexAlign.Center)
-          .backgroundColor(this.canSend() && !this.sending ? '#4D6BFE' : '#E5E7EB')
-          .borderRadius(21)
+          .backgroundColor(this.canSend() && !this.sending ? '#4D6BFE' : '#EFEFEF')
+          .borderRadius(20)
           .onClick(() => { this.doSend(); })
         }
       }
@@ -1517,7 +1517,7 @@ export struct ChatPage {
     .width('100%')
     // 底部留出系统手势条高度：放在 padding 里（不是 margin），键盘弹出时不会多出一条白带
     .padding({ left: 12, right: 12, top: 8, bottom: this.bottomInset + 8 })
-    .backgroundColor('#ffffff')
+    .backgroundColor('#FFFFFF')
   }
 
   /* ================= 确认面板（自绘，黑白配色） =================
@@ -1532,15 +1532,15 @@ export struct ChatPage {
     Column() {
       Column() {
         Text(this.panelTitle())
-          .fontSize(17).fontWeight(FontWeight.Bold).fontColor('#111111')
+          .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           .width('100%')
 
         if (this.confirmKind === 'approval') {
           Text('工具：' + this.confirmTool)
-            .fontSize(13).fontColor('#6b7280').width('100%').margin({ top: 8 })
+            .fontSize(14).fontColor('#9CA3AF').width('100%').margin({ top: 8 })
           if (this.confirmReason !== '') {
             Text(this.confirmReason)
-              .fontSize(13).fontColor('#374151').width('100%')
+              .fontSize(14).fontColor('#1F2329').width('100%')
               .wordBreak(WordBreak.BREAK_WORD)
               .margin({ top: 6 })
           }
@@ -1551,10 +1551,10 @@ export struct ChatPage {
                 Column() {
                   if (this.headerOf(q) !== '') {
                     Text(this.headerOf(q))
-                      .fontSize(11).fontColor('#9ca3af').width('100%').margin({ top: 10 })
+                      .fontSize(12).fontColor('#9CA3AF').width('100%').margin({ top: 10 })
                   }
                   Text(this.questionOf(q))
-                    .fontSize(15).fontColor('#111111').width('100%')
+                    .fontSize(16).fontColor('#1F2329').width('100%')
                     .wordBreak(WordBreak.BREAK_WORD)
                     .margin({ top: 4 })
 
@@ -1567,13 +1567,13 @@ export struct ChatPage {
                     .width('100%')
                     .padding(10)
                     .margin({ top: 8 })
-                    .backgroundColor('#f7f7f8')
+                    .backgroundColor('#F4F5F7')
                     .borderRadius(8)
                   }
 
                   if (this.isMulti(q)) {
                     Text('可多选 · 选完点「确定」')
-                      .fontSize(11).fontColor('#9ca3af').width('100%').margin({ top: 6 })
+                      .fontSize(12).fontColor('#9CA3AF').width('100%').margin({ top: 6 })
                   }
 
                   // 选项：勾选态整体反色（黑底白字 + 白色勾选框），
@@ -1582,24 +1582,24 @@ export struct ChatPage {
                     Row() {
                       Row() {
                         Text(this.isPicked(qi, oi) ? '✓' : '')
-                          .fontSize(12).fontColor('#111111')
+                          .fontSize(12).fontColor('#1F2329')
                       }
                       .width(18).height(18)
                       .justifyContent(FlexAlign.Center)
-                      .backgroundColor('#ffffff')
+                      .backgroundColor('#FFFFFF')
                       .borderRadius(this.isMulti(q) ? 4 : 9)
-                      .border({ width: 1.5, color: this.isPicked(qi, oi) ? '#ffffff' : '#c7c7c7' })
+                      .border({ width: 1.5, color: this.isPicked(qi, oi) ? '#FFFFFF' : '#EFEFEF' })
 
                       Column() {
                         Text(this.labelOf(opt))
                           .fontSize(14)
-                          .fontColor(this.isPicked(qi, oi) ? '#ffffff' : '#111111')
+                          .fontColor(this.isPicked(qi, oi) ? '#FFFFFF' : '#1F2329')
                           .width('100%')
                           .wordBreak(WordBreak.BREAK_WORD)
                         if (this.descOf(opt) !== '') {
                           Text(this.descOf(opt))
-                            .fontSize(11)
-                            .fontColor(this.isPicked(qi, oi) ? '#d4d4d4' : '#9ca3af')
+                            .fontSize(12)
+                            .fontColor(this.isPicked(qi, oi) ? '#EFEFEF' : '#9CA3AF')
                             .width('100%')
                             .wordBreak(WordBreak.BREAK_WORD)
                             .margin({ top: 2 })
@@ -1611,9 +1611,9 @@ export struct ChatPage {
                     }
                     .width('100%')
                     .padding({ left: 10, right: 10, top: 10, bottom: 10 })
-                    .backgroundColor(this.isPicked(qi, oi) ? '#111111' : '#ffffff')
-                    .border({ width: 1, color: this.isPicked(qi, oi) ? '#111111' : '#d1d5db' })
-                    .borderRadius(10)
+                    .backgroundColor(this.isPicked(qi, oi) ? '#1F2329' : '#FFFFFF')
+                    .border({ width: 1, color: this.isPicked(qi, oi) ? '#1F2329' : '#EFEFEF' })
+                    .borderRadius(12)
                     .margin({ top: 8 })
                     .onClick(() => {
                       this.togglePick(qi, oi, this.isMulti(q));
@@ -1625,10 +1625,10 @@ export struct ChatPage {
                   // 单选时 custom 与 selected 互斥，一打字会自动清掉勾选；
                   // 多选时两者可以并存（勾几项 + 再补一句说明）。
                   Text(this.customLabel(q))
-                    .fontSize(11).fontColor('#9ca3af').width('100%').margin({ top: 12 })
+                    .fontSize(12).fontColor('#9CA3AF').width('100%').margin({ top: 12 })
                   TextInput({ text: this.freeOf(qi), placeholder: this.customHint(q) })
                     .width('100%').height(42).fontSize(14)
-                    .backgroundColor('#F3F4F6').borderRadius(10)
+                    .backgroundColor('#F4F5F7').borderRadius(12)
                     .padding({ left: 12, right: 12 })
                     .margin({ top: 4 })
                     .onChange((value: string) => {
@@ -1651,24 +1651,24 @@ export struct ChatPage {
           if (this.confirmKind === 'approval') {
             // 审批是二选一的动作，直接给结局，不必再点一次「确定」
             Button('拒绝')
-              .layoutWeight(1).height(44).fontSize(15).borderRadius(10)
-              .backgroundColor('#ffffff').fontColor('#111111')
-              .border({ width: 1, color: '#111111' })
+              .layoutWeight(1).height(44).fontSize(16).borderRadius(12)
+              .backgroundColor('#FFFFFF').fontColor('#1F2329')
+              .border({ width: 1, color: '#1F2329' })
               .onClick(() => { this.answerApproval('rejected'); })
             Button('允许一次')
-              .layoutWeight(1).height(44).fontSize(15).borderRadius(10)
-              .backgroundColor('#111111').fontColor('#ffffff')
+              .layoutWeight(1).height(44).fontSize(16).borderRadius(12)
+              .backgroundColor('#1F2329').fontColor('#FFFFFF')
               .margin({ left: 10 })
               .onClick(() => { this.answerApproval('allowed-once'); })
           } else {
             Button('取消')
-              .layoutWeight(1).height(44).fontSize(15).borderRadius(10)
-              .backgroundColor('#ffffff').fontColor('#111111')
-              .border({ width: 1, color: '#111111' })
+              .layoutWeight(1).height(44).fontSize(16).borderRadius(12)
+              .backgroundColor('#FFFFFF').fontColor('#1F2329')
+              .border({ width: 1, color: '#1F2329' })
               .onClick(() => { this.dismissConfirm(); })
             Button('确定')
-              .layoutWeight(1).height(44).fontSize(15).borderRadius(10)
-              .backgroundColor('#111111').fontColor('#ffffff')
+              .layoutWeight(1).height(44).fontSize(16).borderRadius(12)
+              .backgroundColor('#1F2329').fontColor('#FFFFFF')
               .margin({ left: 10 })
               .onClick(() => { this.submitConfirm(); })
           }
@@ -1679,9 +1679,9 @@ export struct ChatPage {
       .width('86%')
       .constraintSize({ maxHeight: '80%' })
       .padding(16)
-      .backgroundColor('#ffffff')
+      .backgroundColor('#FFFFFF')
       .borderRadius(16)
-      .border({ width: 1, color: '#e5e7eb' })
+      .border({ width: 1, color: '#EFEFEF' })
     }
     .width('100%')
     .height('100%')
@@ -1706,7 +1706,7 @@ export struct ChatPage {
           LoadingProgress().width(36).height(36).color('#4D6BFE')
           // 把「卡在哪一步」显示出来：转圈不再是不带线索的黑盒
           Text(this.loadStage !== '' ? this.loadStage : '加载中…')
-            .fontSize(13).fontColor('#9CA3AF').margin({ top: 8 })
+            .fontSize(14).fontColor('#9CA3AF').margin({ top: 8 })
         }
         .layoutWeight(1)
         .width('100%')
@@ -1717,14 +1717,14 @@ export struct ChatPage {
             .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1F2329')
           // 失败原因包含完整 URL、错误码和具体解释；长按可复制，方便直接发出来定位
           Text(this.errorMsg)
-            .fontSize(12).fontColor('#dc2626')
+            .fontSize(12).fontColor('#DC2626')
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.LocalDevice)
             .margin({ top: 12, left: 18, right: 18 })
-          Text('（长按上面这段可以复制）').fontSize(10).fontColor('#9CA3AF').margin({ top: 6 })
+          Text('（长按上面这段可以复制）').fontSize(12).fontColor('#9CA3AF').margin({ top: 6 })
           Button('重试')
-            .fontSize(14).height(36).borderRadius(18)
-            .backgroundColor('#4D6BFE').fontColor('#ffffff')
+            .fontSize(14).height(36).borderRadius(16)
+            .backgroundColor('#4D6BFE').fontColor('#FFFFFF')
             .padding({ left: 22, right: 22 })
             .margin({ top: 16 })
             .onClick(() => { this.bootstrap(); })
@@ -1738,9 +1738,9 @@ export struct ChatPage {
           Text('🐳')
             .fontSize(58)
           Text('晚上好，有什么我能帮你的吗？')
-            .fontSize(22)
+            .fontSize(20)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#111111')
+            .fontColor('#1F2329')
             .margin({ top: 26 })
             .textAlign(TextAlign.Center)
         }
@@ -1791,13 +1791,13 @@ export struct ChatPage {
                   : { left: 2, right: 2, top: 6, bottom: 6 })
                 // 助手消息不套气泡：官方界面里回复是直接铺在页面上的正文，
                 // 只有用户的消息有底色，这样长回答的阅读感更接近网页版。
-                .backgroundColor(item.role === 'user' ? '#F3F4F6' : Color.Transparent)
-                .borderRadius(18)
+                .backgroundColor(item.role === 'user' ? '#F4F5F7' : Color.Transparent)
+                .borderRadius(16)
                 .constraintSize({ maxWidth: '86%' })
                 .clip(true)
 
                 if (item.role === 'assistant' && item.interrupted === true) {
-                  Text('（被打断）').fontSize(10).fontColor('#f59e0b').margin({ left: 6, bottom: 2 })
+                  Text('（被打断）').fontSize(12).fontColor('#F59E0B').margin({ left: 6, bottom: 2 })
                 }
               }
               .width('100%')
@@ -1831,6 +1831,6 @@ export struct ChatPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#ffffff')
+    .backgroundColor('#FFFFFF')
   }
 }

@@ -185,7 +185,7 @@ export struct SessionDrawer {
       // 顶部：新对话 + 关闭
       Row() {
         Text('新对话')
-          .fontSize(15).fontWeight(FontWeight.Medium).fontColor('#4D6BFE')
+          .fontSize(16).fontWeight(FontWeight.Medium).fontColor('#4D6BFE')
           .layoutWeight(1)
           .onClick(() => { this.doCreate(); })
         if (this.creating) {
@@ -205,7 +205,7 @@ export struct SessionDrawer {
 
       // 搜索框
       Row() {
-        Text('🔍').fontSize(13).fontColor('#9CA3AF')
+        Text('🔍').fontSize(14).fontColor('#9CA3AF')
         TextInput({ text: this.query, placeholder: '搜索会话' })
           .layoutWeight(1)
           .height(38)
@@ -217,8 +217,8 @@ export struct SessionDrawer {
       }
       .width('100%')
       .padding({ left: 12, right: 12 })
-      .backgroundColor('#F3F4F6')
-      .borderRadius(19)
+      .backgroundColor('#F4F5F7')
+      .borderRadius(20)
       .margin({ left: 14, right: 14, bottom: 6 })
 
       // 会话列表（按时间分组 + 搜索过滤）
@@ -233,8 +233,8 @@ export struct SessionDrawer {
             .textAlign(TextAlign.Start)
             .margin({ left: 18, right: 18 })
           Button('重试')
-            .fontSize(13).height(32).borderRadius(16)
-            .backgroundColor('#F3F4F6').fontColor('#1F2329')
+            .fontSize(14).height(32).borderRadius(16)
+            .backgroundColor('#F4F5F7').fontColor('#1F2329')
             .padding({ left: 18, right: 18 })
             .margin({ top: 12 })
             .onClick(() => { this.load(); })
@@ -243,7 +243,7 @@ export struct SessionDrawer {
       } else if (this.rows().length === 0) {
         Column() {
           Text(this.query.length > 0 ? '没有匹配的会话' : '还没有会话')
-            .fontSize(13).fontColor('#9CA3AF')
+            .fontSize(14).fontColor('#9CA3AF')
         }
         .layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else {
@@ -281,7 +281,7 @@ export struct SessionDrawer {
         Column() {
           Text('周总').fontSize(14).fontColor('#1F2329')
           Text(this.modelLabel)
-            .fontSize(11).fontColor('#9CA3AF')
+            .fontSize(12).fontColor('#9CA3AF')
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
             .margin({ top: 2 })
         }
@@ -290,7 +290,7 @@ export struct SessionDrawer {
         .margin({ left: 10 })
         SymbolGlyph($r('sys.symbol.chevron_right'))
           .fontSize(16)
-          .fontColor(['#C7C7C7'])
+          .fontColor(['#EFEFEF'])
       }
       .width('100%')
       .padding({ left: 18, right: 18, top: 14, bottom: 18 })
