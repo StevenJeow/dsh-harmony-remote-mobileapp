@@ -1453,16 +1453,8 @@ export struct ChatPage {
         .margin({ left: 8, right: 8 })
         .backgroundColor('#F4F5F7')
         .borderRadius(20)
-        .bindMenu(this.modelMenuBuilder(), {
-          isShow: $$this.modelMenuVisible,
-          onDisappear: () => { this.modelMenuVisible = false; }
-        })
-        .onClick(async () => {
-          if (this.modelGroups.length === 0) {
-            await this.ensureModelsLoaded();
-          }
-          this.modelMenuVisible = true;
-        })
+        // 系统下拉菜单：bindMenu 自动处理弹出（$$ 双向绑定当前 SDK 不支持）
+        .bindMenu(this.modelMenuBuilder())
 
         // 发送 / 停止（独立圆形气泡）
         if (this.running) {
