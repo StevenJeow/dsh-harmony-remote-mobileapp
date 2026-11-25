@@ -1343,26 +1343,29 @@ export struct ChatPage {
           })
 
         Row() {
-          // 深度思考
+          // 模型：显示当前模型名，点开模型页（对应官方的「深度思考」位置）
           Row() {
             Text('◍').fontSize(12).fontColor('#4D6BFE')
-            Text('深度思考').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
+            Text(this.modelLabel)
+              .fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
+              .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+              .constraintSize({ maxWidth: 120 })
           }
           .padding({ left: 12, right: 12, top: 7, bottom: 7 })
           .backgroundColor('#EEF2FF')
           .borderRadius(16)
           .onClick(() => { this.onOpenModelTab(); })
 
-          // 智能搜索
+          // 会话：打开会话抽屉（对应官方的「智能搜索」位置）
           Row() {
             Text('◎').fontSize(12).fontColor('#4D6BFE')
-            Text('智能搜索').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
+            Text('会话').fontSize(13).fontColor('#4D6BFE').margin({ left: 4 })
           }
           .padding({ left: 12, right: 12, top: 7, bottom: 7 })
           .backgroundColor('#EEF2FF')
           .borderRadius(16)
           .margin({ left: 8 })
-          .onClick(() => { this.onOpenModelTab(); })
+          .onClick(() => { this.onOpenSessionsTab(); })
 
           Blank()
 
