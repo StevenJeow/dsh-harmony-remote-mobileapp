@@ -2,14 +2,15 @@
  * Index.ets — App 入口（左侧会话抽屉 + 右侧对话区）
  * ---------------------------------------------------------------------------
  * 交互对齐 DeepSeek 官方网页版：左边是会话栏，右边是对话。
- * 手机竖屏放不下常驻侧栏，所以改成从左侧滑出的抽屉：
+ * 手机竖屏放不下常驻侧栏，所以改成从左侧滑出的抽屉。
  *
  *   主区    ：只有对话（ChatPage）
  *   抽屉    ：新对话 / 会话列表 / 模型入口（SessionDrawer）
- *   模型页  ：从抽屉底部进入，全屏覆盖，选完自动关
+ *   模型页  ：官方半模态弹窗（bindSheet），带系统滑入动画 + 下拉关闭
  *
- * 与旧版的区别：原来的「对话 / 模型 / 会话」三个底部 Tab 取消了 ——
- * 会话列表搬进抽屉，模型入口也搬进抽屉底部，跟网页版一致。
+ * 与旧版的区别：
+ *   ① 原来的「对话 / 模型 / 会话」三个底部 Tab 取消，会话搬进抽屉
+ *   ② 模型选择不再自己拼遮罩面板，改用系统 bindSheet（官方组件）
  */
 import { ChatPage } from './ChatPage';
 import { ModelPage } from './ModelPage';
@@ -27,7 +28,7 @@ struct Index {
   @State cleartextOk: boolean = true;
   /** 抽屉是否展开。 */
   @State drawerOpen: boolean = false;
-  /** 模型页是否全屏覆盖。 */
+  /** 模型选择面板是否展开（由 bindSheet 承载）。 */
   @State showModel: boolean = false;
   /**
    * 模型页用一个固定的「当前页」值触发加载。
@@ -42,6 +43,22 @@ struct Index {
   /** 系统栏高度（px，由 EntryAbility 写入）。 */
   @StorageProp('safeTopPx') safeTopPx: number = 0;
   @StorageProp('safeBottomPx') safeBottomPx: number = 0;
+
+  /** 模型选择面板内容（由系统 bindSheet 渲染，自带滑入/下拉关闭动画）。 */
+  @Builder
+  modelSheetBuilder() {
+    ModelPage({
+      sessionId: $sessionId,
+      modelLabel: $modelLabel,
+      activeTab: $activeTab,
+      onSelected: (provider: string, model: string) => {
+        this.modelLabel = model;
+      },
+      onPicked: () => { this.showModel = false; }
+    })
+      .width('100%')
+      .height('100%')
+  }
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
@@ -69,7 +86,7 @@ struct Index {
       .height('100%')
       .backgroundColor('#FFFFFF')
 
-      // 抽屉 + 遮罩
+      // 抽屉 + 遮罩（带滑入/滑出动画）
       if (this.drawerOpen) {
         Row()
           .width('100%')
@@ -78,6 +95,7 @@ struct Index {
           .onClick(() => {
             this.drawerOpen = false;
           })
+          .transition(TransitionEffect.OPACITY.animation({ duration: 200, curve: Curve.EaseOut }))
 
         SessionDrawer({
           sessionId: $sessionId,
@@ -92,53 +110,20 @@ struct Index {
           .width('80%')
           .height('100%')
           .shadow({ radius: 18, color: '#33000000', offsetX: 6, offsetY: 0 })
-      }
-
-      // 模型选择：从底部展开的面板（不再是独立全屏页）
-      if (this.showModel) {
-        // 遮罩：点空白处收起
-        Column()
-          .width('100%')
-          .height('100%')
-          .backgroundColor('#33000000')
-          .onClick(() => { this.showModel = false; })
-
-        Column() {
-          // 顶部拖动条
-          Row() {
-            Column()
-              .width(36)
-              .height(4)
-              .borderRadius(8)
-              .backgroundColor('#EFEFEF')
-          }
-          .width('100%')
-          .justifyContent(FlexAlign.Center)
-          .padding({ top: 10, bottom: 4 })
-
-          ModelPage({
-            sessionId: $sessionId,
-            modelLabel: $modelLabel,
-            activeTab: $activeTab,
-            onSelected: (provider: string, model: string) => {
-              this.modelLabel = model;
-            },
-            onPicked: () => { this.showModel = false; }
-          })
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .height('72%')
-        .backgroundColor('#FFFFFF')
-        .borderRadius({ topLeft: 22, topRight: 22 })
-        .shadow({ radius: 20, color: '#22000000', offsetY: -4 })
-        .position({ x: 0, y: '28%' })
+          .transition(TransitionEffect.translate({ x: -360 })
+            .animation({ duration: 260, curve: Curve.FastOutSlowIn }))
       }
     }
     .width('100%')
     .height('100%')
     .backgroundColor('#FFFFFF')
-    // 不再画到系统栏下面：交给系统留安全区，
-    // 否则顶栏图标被状态栏压住、底部输入框被手势条裁掉。
+    // 模型选择：用系统半模态面板（官方组件），自带滑入动画、下拉关闭、手势
+    .bindSheet($$this.showModel, this.modelSheetBuilder(), {
+      height: SheetSize.LARGE,
+      dragBar: true,
+      showClose: false,
+      backgroundColor: '#FFFFFF',
+      onDisappear: () => { this.showModel = false; }
+    })
   }
 }

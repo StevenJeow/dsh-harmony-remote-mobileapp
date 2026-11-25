@@ -272,14 +272,10 @@ export struct SessionDrawer {
 
       Divider().color('#EFEFEF')
 
-      // 底部：用户行（头像 + 名称 + 模型入口）
+      // 底部：本机遥控行（不写死任何账号，只显示当前模型 + 入口）
       Row() {
-        Stack() {
-          Circle({ width: 30, height: 30 }).fill('#EEF2FF')
-          Text('周').fontSize(14).fontColor('#4D6BFE')
-        }
         Column() {
-          Text('周总').fontSize(14).fontColor('#1F2329')
+          Text('本机遥控').fontSize(14).fontColor('#1F2329')
           Text(this.modelLabel)
             .fontSize(12).fontColor('#9CA3AF')
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -287,10 +283,9 @@ export struct SessionDrawer {
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
-        .margin({ left: 10 })
         SymbolGlyph($r('sys.symbol.chevron_right'))
           .fontSize(16)
-          .fontColor(['#EFEFEF'])
+          .fontColor(['#9CA3AF'])
       }
       .width('100%')
       .padding({ left: 18, right: 18, top: 14, bottom: 18 })
