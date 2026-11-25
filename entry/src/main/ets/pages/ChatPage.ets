@@ -436,6 +436,21 @@ export struct ChatPage {
     }
   }
 
+  /** 把 API 模型 id 换成对用户友好的产品名（面板里优先用服务端的 name）。 */
+  productName(): string {
+    const raw: string = this.modelLabel;
+    const low: string = raw.toLowerCase();
+    if (low.indexOf('deepseek-v4.1-flash') >= 0 || low === 'deepseek-flash') {
+      return 'DeepSeek-V4.1-Flash';
+    }
+    if (low.indexOf('deepseek-v4-pro') >= 0 || low === 'deepseek-v4-pro') {
+      return 'DeepSeek-V4-Pro';
+    }
+    if (low === 'deepseek-chat' || low.indexOf('deepseek-chat') >= 0) {
+      return 'DeepSeek-Chat';
+    }
+    return raw;
+  }
   /** 点模型胶囊：展开/收起模型下拉面板（不跳页面）。 */
   async toggleModelPicker(): Promise<void> {
     this.modelOpen = !this.modelOpen;
@@ -1449,19 +1464,10 @@ export struct ChatPage {
 
       // 下面一排：每个控件各自一个气泡，中间留空隙
       Row() {
-        // ＋ 上传（独立圆形气泡）
-        Row() {
-          Text('+').fontSize(24).fontColor('#1F2329')
-        }
-        .width(42).height(42)
-        .justifyContent(FlexAlign.Center)
-        .backgroundColor('#F4F5F7')
-        .borderRadius(21)
-        .onClick(() => { this.pickAndUpload(); })
 
         // 模型（独立胶囊气泡，点开下拉）
         Row() {
-          Text(this.modelLabel)
+          Text(this.productName())
             .fontSize(13).fontColor('#1F2329')
             .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
             .layoutWeight(1)
