@@ -19,7 +19,7 @@ import {
   ChatMessage, MessagesData, StatusData, SendData, CancelData, Result,
   UploadedFileInfo, UploadedImage, UploadData,
   ConfirmEvent, ConfirmPayload, ConfirmQuestion, ConfirmOption, ConfirmAnswer, QuestionAnswer, EventsData,
-  SessionsData, SessionInfo, ModelsData, ModelSelection, SelectModelData,
+  SessionsData, SessionInfo, ModelsData, ModelGroup, ModelInfo, ModelSelection, SelectModelData,
   fetchStatus, fetchMessages, fetchSessions, fetchModels, selectModel,
   sendPrompt, cancelTurn, uploadFile, modelLabelOf,
   pickSessionId, pickDefaultSession, pollEvents, answerConfirm, asText, sessionLabelOf,
@@ -108,6 +108,10 @@ export struct ChatPage {
   @StorageProp('safeTopPx') safeTopPx: number = 0;
   /** 自己量出来的系统栏高度（vp），全屏布局下用它留白 */
   @State topInset: number = 0;
+  /** 输入框上方的模型下拉面板 */
+  @State modelOpen: boolean = false;
+  @State modelGroups: ModelGroup[] = [];
+  @State modelPicking: boolean = false;
   @State bottomInset: number = 0;
   @StorageProp('safeBottomPx') safeBottomPx: number = 0;
 
@@ -432,6 +436,33 @@ export struct ChatPage {
     }
   }
 
+  /** 点模型胶囊：展开/收起模型下拉面板（不跳页面）。 */
+  async toggleModelPicker(): Promise<void> {
+    this.modelOpen = !this.modelOpen;
+    if (!this.modelOpen || this.modelGroups.length > 0 || this.modelPicking) {
+      return;
+    }
+    this.modelPicking = true;
+    const res: Result<ModelsData> = await fetchModels(this.sessionId);
+    if (res.ok && res.data !== undefined && res.data.groups !== undefined) {
+      this.modelGroups = res.data.groups;
+    } else {
+      promptAction.showToast({ message: res.ok ? '没有可选模型' : res.error });
+    }
+    this.modelPicking = false;
+  }
+
+  /** 在面板里选中一个模型：立刻生效并收起面板。 */
+  async pickModel(provider: string, model: string): Promise<void> {
+    const res: Result<SelectModelData> = await selectModel(this.sessionId, provider, model, '');
+    if (res.ok) {
+      this.modelLabel = modelLabelOf({ provider: provider, model: model });
+      this.modelOpen = false;
+      promptAction.showToast({ message: '已切换到 ' + this.modelLabel });
+    } else {
+      promptAction.showToast({ message: res.error });
+    }
+  }
   /** 刷新状态 + 消息。 */
   async loadAll(): Promise<void> {
     try {
@@ -450,6 +481,11 @@ export struct ChatPage {
       }
       await this.loadMessages(true);
       await this.applyModelDefault();   // 会话确定后套用默认模型（flash/high）
+      // 兜底：服务端还没给出模型时，先用本地默认模型名占位，
+      // 不让输入区一直写「未选择模型」（点开面板选过就会变成真实值）。
+      if (this.modelLabel === '未选择模型' && DEFAULT_MODEL !== '') {
+        this.modelLabel = modelLabelOf({ provider: DEFAULT_MODEL_PROVIDER, model: DEFAULT_MODEL });
+      }
       await this.loadSessionMeta();     // 页头要显示会话标题
       this.ensureRunWatch();
       await this.consumeShared();       // 从分享面板进来的图片
@@ -1328,6 +1364,60 @@ export struct ChatPage {
         .margin({ top: 8 })
       }
 
+      // 模型下拉面板：贴在输入框上方，选中或再点一次收起
+      if (this.modelOpen) {
+        Column() {
+          if (this.modelPicking) {
+            Row() {
+              LoadingProgress().width(16).height(16).color('#9CA3AF')
+              Text('读取模型目录…').fontSize(12).fontColor('#9CA3AF').margin({ left: 6 })
+            }.padding(14)
+          } else {
+            Scroll() {
+              Column() {
+                ForEach(this.modelGroups, (g: ModelGroup) => {
+                  Text(g.name !== undefined ? g.name : '')
+                    .fontSize(11).fontColor('#9CA3AF')
+                    .width('100%')
+                    .padding({ left: 14, right: 14, top: 10, bottom: 4 })
+                  ForEach(g.models, (m: ModelInfo) => {
+                    Row() {
+                      Column() {
+                        Text(m.name !== undefined ? m.name : (m.id !== undefined ? m.id : ''))
+                          .fontSize(14).fontColor('#1F2329')
+                          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+                        Text(m.id !== undefined ? m.id : '')
+                          .fontSize(11).fontColor('#9CA3AF')
+                          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+                          .margin({ top: 2 })
+                      }
+                      .alignItems(HorizontalAlign.Start)
+                      .layoutWeight(1)
+                    }
+                    .width('100%')
+                    .padding({ left: 14, right: 14, top: 9, bottom: 9 })
+                    .backgroundColor('#FFFFFF')
+                    .onClick(() => {
+                      this.pickModel(g.id !== undefined ? g.id : '', m.id !== undefined ? m.id : '');
+                    })
+                  }, (m: ModelInfo) => (g.id !== undefined ? g.id : '') + '/' + (m.id !== undefined ? m.id : ''))
+                }, (g: ModelGroup) => g.id !== undefined ? g.id : '')
+              }
+              .width('100%')
+            }
+            .width('100%')
+            .constraintSize({ maxHeight: 260 })
+            .scrollBar(BarState.Off)
+          }
+        }
+        .width('100%')
+        .backgroundColor('#FFFFFF')
+        .borderRadius(18)
+        .border({ width: 1, color: '#EFEFEF' })
+        .shadow({ radius: 16, color: 'rgba(0,0,0,0.08)', offsetY: 4 })
+        .margin({ bottom: 8 })
+      }
+
       // 大圆角白卡：一行输入 + 下方胶囊按钮排（对齐 DeepSeek 官方输入区）
       Column() {
         TextInput({ text: this.input, placeholder: '发消息或按住说话' })
@@ -1358,7 +1448,7 @@ export struct ChatPage {
           .padding({ left: 12, right: 12, top: 7, bottom: 7 })
           .backgroundColor('#EEF2FF')
           .borderRadius(16)
-          .onClick(() => { this.onOpenModelTab(); })
+          .onClick(() => { this.toggleModelPicker(); })
 
           // 会话：打开会话抽屉（对应官方的「智能搜索」位置）
           Row() {
