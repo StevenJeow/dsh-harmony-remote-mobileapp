@@ -296,6 +296,10 @@ export struct ChatPage {
         // 里挑一个默认，否则本页和模型页的会话接口会全部 409 no-session。
         serverSid = pickSessionId(d);
         this.running = (d.running === true);
+      }
+      // 不管走哪个分支，都先把服务端当前的模型名显示出来，
+      // 否则第一次进页面会一直写「未选择模型」，要点开对话框才有名字。
+      if (d !== undefined && d !== null && d.model !== undefined && d.model !== null) {
         this.modelLabel = modelLabelOf(d.model);
       }
       if (serverSid !== '' && serverSid !== this.sessionId) {

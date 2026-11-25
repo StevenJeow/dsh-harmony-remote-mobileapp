@@ -22,7 +22,7 @@ struct Index {
   /** 当前会话 id（对话页与抽屉共享）。 */
   @State sessionId: string = '';
   /** 当前模型显示名。 */
-  @State modelLabel: string = '未选择模型';
+  @State modelLabel: string = 'DeepSeek-V4.1-Flash';
   /** 明文 HTTP 自检结果，只在为 false 时显示警告条。 */
   @State cleartextOk: boolean = true;
   /** 抽屉是否展开。 */
@@ -94,19 +94,45 @@ struct Index {
           .shadow({ radius: 18, color: '#33000000', offsetX: 6, offsetY: 0 })
       }
 
-      // 模型页全屏覆盖
+      // 模型选择：从底部展开的面板（不再是独立全屏页）
       if (this.showModel) {
-        ModelPage({
-          sessionId: $sessionId,
-          modelLabel: $modelLabel,
-          activeTab: $activeTab,
-          onSelected: (provider: string, model: string) => {
-            this.modelLabel = model;
-          },
-          onPicked: () => { this.showModel = false; }
-        })
+        // 遮罩：点空白处收起
+        Column()
           .width('100%')
           .height('100%')
+          .backgroundColor('#33000000')
+          .onClick(() => { this.showModel = false; })
+
+        Column() {
+          // 顶部拖动条
+          Row() {
+            Column()
+              .width(36)
+              .height(4)
+              .borderRadius(2)
+              .backgroundColor('#E5E7EB')
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
+          .padding({ top: 10, bottom: 4 })
+
+          ModelPage({
+            sessionId: $sessionId,
+            modelLabel: $modelLabel,
+            activeTab: $activeTab,
+            onSelected: (provider: string, model: string) => {
+              this.modelLabel = model;
+            },
+            onPicked: () => { this.showModel = false; }
+          })
+            .layoutWeight(1)
+        }
+        .width('100%')
+        .height('72%')
+        .backgroundColor('#FFFFFF')
+        .borderRadius({ topLeft: 22, topRight: 22 })
+        .shadow({ radius: 20, color: '#22000000', offsetY: -4 })
+        .position({ x: 0, y: '28%' })
       }
     }
     .width('100%')
