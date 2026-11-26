@@ -10,6 +10,8 @@
  * 放置位置：entry/src/main/ets/pages/SetupPage.ets
  */
 import { RuntimeConfig } from '../common/RuntimeConfig';
+import { http } from '@kit.NetworkKit';
+import { promptAction } from '@kit.ArkUI';
 
 @Component
 export struct SetupPage {
@@ -20,6 +22,9 @@ export struct SetupPage {
   @State token: string = '';
   @State errorMsg: string = '';
   @State saving: boolean = false;
+  /** 扫码/口头拿到的 6 位配对码 */
+  @State pairCode: string = '';
+  @State pairing: boolean = false;
 
   /** 校验用户填的地址；返回空串表示没问题。 */
   private checkUrl(): string {
@@ -37,6 +42,64 @@ export struct SetupPage {
     return '';
   }
 
+  /**
+   * 用 6 位配对码换取临时令牌（只走局域网）。
+   * 成功后直接保存「地址 + 令牌」，不用再手抄 token。
+   */
+  async doPair(): Promise<void> {
+    if (this.pairing) {
+      return;
+    }
+    const err: string = this.checkUrl();
+    if (err !== '') {
+      this.errorMsg = err;
+      return;
+    }
+    if (!/^\d{6}$/.test(this.pairCode.trim())) {
+      this.errorMsg = '配对码是 6 位数字';
+      return;
+    }
+    this.pairing = true;
+    this.errorMsg = '';
+    const req = http.createHttp();
+    try {
+      const base: string = this.url.trim().replace(/\/+$/, '');
+      const resp = await req.request(base + '/pair/claim', {
+        method: http.RequestMethod.POST,
+        header: { 'Content-Type': 'application/json' },
+        extraData: JSON.stringify({ code: this.pairCode.trim() }),
+        connectTimeout: 8000,
+        readTimeout: 15000
+      });
+      const raw: string = (typeof resp.result === 'string') ? resp.result : String(resp.result);
+      if (resp.responseCode === 200) {
+        const data = JSON.parse(raw) as Record<string, Object>;
+        const tk: string = String(data['token'] ?? '');
+        if (tk === '') {
+          this.errorMsg = '电脑端没返回令牌';
+          return;
+        }
+        await RuntimeConfig.save(this.url.trim(), tk);
+        promptAction.showToast({ message: '配对成功' });
+        this.onDone();
+      } else {
+        let reason: string = '';
+        try { reason = String((JSON.parse(raw) as Record<string, Object>)['reason'] ?? ''); } catch (e) {}
+        if (reason === 'code-mismatch') {
+          this.errorMsg = '配对码不对或已过期，去电脑上重新取一个';
+        } else if (reason === 'bad-format') {
+          this.errorMsg = '配对码格式不对';
+        } else {
+          this.errorMsg = '配对失败（HTTP ' + resp.responseCode + '）';
+        }
+      }
+    } catch (e) {
+      this.errorMsg = '连不上电脑：' + String((e as Error).message);
+    } finally {
+      req.destroy();
+      this.pairing = false;
+    }
+  }
   async doSave(): Promise<void> {
     if (this.saving) {
       return;
@@ -94,7 +157,43 @@ export struct SetupPage {
               this.url = value;
             })
 
+          // ===== 配对码：扫电脑上的二维码或手输 6 位，不用手抄 token =====
+          Text('配对码（推荐）')
+            .fontSize(12).fontColor('#8C8C8C')
+            .width('100%')
+            .margin({ top: 18 })
+          Row() {
+            TextInput({ text: this.pairCode, placeholder: '6 位数字' })
+              .layoutWeight(1)
+              .height(44).fontSize(18)
+              .backgroundColor('#F5F7FA').borderRadius(12)
+              .padding({ left: 14, right: 14 })
+              .type(InputType.Number)
+              .maxLength(6)
+              .onChange((value: string) => {
+                this.pairCode = value;
+              })
+            Button(this.pairing ? '配对中…' : '配对')
+              .height(44).fontSize(15)
+              .borderRadius(12)
+              .padding({ left: 18, right: 18 })
+              .backgroundColor(this.pairing ? '#4A90D9' : '#00559E')
+              .fontColor('#ffffff')
+              .enabled(!this.pairing)
+              .margin({ left: 10 })
+              .onClick(() => {
+                this.doPair();
+              })
+          }
+          .width('100%')
+          .margin({ top: 8 })
+          Text('电脑上打开 DSH 面板拿到 6 位码，填进来即可，令牌会自动保存')
+            .fontSize(12).fontColor('#8C8C8C')
+            .width('100%')
+            .margin({ top: 8 })
+
           Text('访问令牌')
+
             .fontSize(12).fontColor('#8C8C8C')
             .width('100%')
             .margin({ top: 18 })
