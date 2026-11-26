@@ -12,6 +12,7 @@
 import { RuntimeConfig } from '../common/RuntimeConfig';
 import { http } from '@kit.NetworkKit';
 import { promptAction } from '@kit.ArkUI';
+import { scanBarcode, scanCore } from '@kit.ScanKit';
 
 @Component
 export struct SetupPage {
@@ -46,6 +47,66 @@ export struct SetupPage {
    * 用 6 位配对码换取临时令牌（只走局域网）。
    * 成功后直接保存「地址 + 令牌」，不用再手抄 token。
    */
+  /**
+   * 扫码配对：扫电脑面板上的二维码（内容形如
+   * dsh-remote://pair?b=http://192.168.1.9:3100&k=123456&n=DSH），
+   * 自动填地址和配对码，然后直接换成令牌。
+   */
+  async doScanPair(): Promise<void> {
+    if (this.pairing) {
+      return;
+    }
+    this.errorMsg = '';
+    try {
+      const opt: scanBarcode.ScanOptions = {
+        scanTypes: [scanCore.ScanType.ALL],
+        enableMultiMode: true,
+        enableAlbum: true
+      };
+      const result: scanBarcode.ScanResult = await scanBarcode.startScanForResult(
+        getContext(this), opt);
+      const text: string = result.originalValue ?? '';
+      if (text === '') {
+        return;
+      }
+      // 解析 dsh-remote://pair?b=...&k=...&n=...
+      const qIndex: number = text.indexOf('?');
+      if (qIndex < 0 || text.indexOf('dsh-remote://') !== 0) {
+        this.errorMsg = '这不是 DSH 的配对二维码';
+        return;
+      }
+      const qs: string = text.substring(qIndex + 1);
+      let base: string = '';
+      let code: string = '';
+      const parts: string[] = qs.split('&');
+      for (let i = 0; i < parts.length; i++) {
+        const kv: string[] = parts[i].split('=');
+        if (kv.length < 2) {
+          continue;
+        }
+        const k: string = kv[0];
+        const v: string = decodeURIComponent(kv[1]);
+        if (k === 'b') {
+          base = v;
+        } else if (k === 'k') {
+          code = v;
+        }
+      }
+      if (base === '' || !/^\d{6}$/.test(code)) {
+        this.errorMsg = '二维码内容不完整（缺少地址或配对码）';
+        return;
+      }
+      this.url = base;
+      this.pairCode = code;
+      await this.doPair();
+    } catch (e) {
+      // 用户取消扫码是正常操作，不当成错误
+      const msg: string = String((e as Error).message);
+      if (msg.indexOf('cancel') < 0 && msg.indexOf('Cancel') < 0) {
+        this.errorMsg = '扫码失败：' + msg;
+      }
+    }
+  }
   async doPair(): Promise<void> {
     if (this.pairing) {
       return;
